@@ -22,12 +22,12 @@ export default function StudentsPage() {
           <div className="text-xl font-semibold">Students</div>
           <div className="text-sm text-slate-500">All students in one table</div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by name."
-            className="w-60 rounded-xl border px-3 py-2"
+            className="w-full rounded-xl border px-3 py-2 sm:w-60"
           />
           <button onClick={() => setAdding(true)} className="rounded-xl bg-indigo-600 text-white px-3 py-2">
             Add Student

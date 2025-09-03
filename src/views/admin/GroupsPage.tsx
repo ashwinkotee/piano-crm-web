@@ -15,7 +15,7 @@ export default function GroupsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="text-xl font-semibold">Groups</div>
           <div className="text-sm text-slate-500">Create groups and schedule sessions (e.g., Theory)</div>
@@ -23,13 +23,13 @@ export default function GroupsPage() {
         <Button onClick={() => setShowCreate(true)}>New Group</Button>
       </div>
 
-      <div className="rounded-2xl border bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border bg-white p-4 shadow-sm overflow-x-auto">
         {loading ? (
           <div className="text-slate-500">Loading.</div>
         ) : groups.length === 0 ? (
           <div className="text-slate-500">No groups yet.</div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="text-left text-slate-500">
               <tr>
                 <th className="p-2">Name</th>

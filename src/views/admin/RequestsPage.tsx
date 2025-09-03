@@ -16,13 +16,13 @@ export default function RequestsPage() {
         <div className="text-sm text-slate-500">Reschedule / Cancel from portal</div>
       </div>
 
-      <div className="rounded-2xl border bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border bg-white p-4 shadow-sm overflow-x-auto">
         {loading ? (
           <div className="text-slate-500">Loading…</div>
         ) : data.length === 0 ? (
           <div className="text-slate-500">No requests.</div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="text-left text-slate-500">
               <tr>
                 <th className="p-2">Created</th>

@@ -91,7 +91,7 @@ function Toolbar({
         <div className="text-2xl font-semibold">{format(month, "MMMM yyyy")}</div>
         <div className="text-sm text-slate-500">Month schedule (4 per student)</div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button variant="secondary" onClick={onPrev}>← Prev</Button>
         <Button variant="secondary" onClick={onNext}>Next →</Button>
         <Button variant="secondary" onClick={onToggleMode}>

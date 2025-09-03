@@ -17,14 +17,14 @@ export default function UpcomingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="text-xl font-semibold">{format(cursor, "MMMM yyyy")}</div>
           <div className="text-sm text-slate-500">
             Your teacher manages scheduling. Contact them for any changes.
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button className="rounded-xl border px-3 py-2 hover:bg-slate-50" onClick={() => setCursor(addMonths(cursor, -1))}>
             ← Prev
           </button>
@@ -50,7 +50,7 @@ export default function UpcomingPage() {
               </div>
               <ul className="divide-y divide-slate-200">
                 {lessons.map(l => (
-                  <li key={l._id} className="flex items-center justify-between py-2">
+                  <li key={l._id} className="flex flex-col items-start justify-between gap-2 py-2 sm:flex-row sm:items-center">
                     <div className="flex items-center gap-3">
                       <div className="w-28 text-sm text-slate-500">
                         {format(new Date(l.start), "p")} – {format(new Date(l.end), "p")}

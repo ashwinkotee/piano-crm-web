@@ -9,11 +9,11 @@ export default function PortalApp() {
   return (
     <div className="min-h-screen">
       <header className="border-b bg-white">
-        <div className="mx-auto max-w-4xl px-4 h-14 flex items-center justify-between">
-          <div className="font-semibold">Learn Music with Ashwin - Student Portal</div>
-          <nav className="flex gap-2 text-sm">
+        <div className="mx-auto max-w-4xl px-4 py-3 flex flex-col gap-2 sm:h-14 sm:flex-row sm:items-center sm:justify-between">
+          <div className="font-semibold text-center sm:text-left">Learn Music with Ashwin - Student Portal</div>
+          <nav className="flex flex-wrap items-center justify-center gap-2 text-sm sm:justify-end">
             <Tab to="/portal/upcoming" label="Upcoming" />
-            <button onClick={doLogout} className="rounded-lg border px-3 py-1 hover:bg-slate-100">Logout</button>
+            <button onClick={doLogout} className="rounded-lg border px-3 py-1.5 hover:bg-slate-100">Logout</button>
           </nav>
         </div>
       </header>
