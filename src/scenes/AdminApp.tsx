@@ -1,6 +1,7 @@
 import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth";
 import StudentsPage from "../views/admin/StudentsPage";
+import StudentDetailPage from "../views/admin/StudentDetailPage";
 import SchedulePage from "../views/admin/SchedulePage";
 import RequestsPage from "../views/admin/RequestsPage";
 import GroupsPage from "../views/admin/GroupsPage";
@@ -26,6 +27,7 @@ export default function AdminApp() {
       <main className="mx-auto max-w-6xl px-4 py-6">
         <Routes>
           <Route path="/students" element={<StudentsPage />} />
+          <Route path="/students/:id" element={<StudentDetailPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
           <Route path="/requests" element={<RequestsPage />} />
           <Route path="/groups" element={<GroupsPage />} />

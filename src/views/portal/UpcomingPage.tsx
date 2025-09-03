@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import { useLessons } from "../../hooks/lessons";
 import { addMonths, format, parse, startOfMonth } from "date-fns";
+import { useMyHomework, updateHomework } from "../../hooks/homework";
 
 export default function UpcomingPage() {
   const [cursor, setCursor] = useState<Date>(startOfMonth(new Date()));
   const startISO = useMemo(() => format(cursor, "yyyy-MM-dd"), [cursor]);
   const { data, loading } = useLessons({ view: "month", startISO });
+  const { items: homework, loading: hwLoading, refresh: refreshHW } = useMyHomework();
 
   const grouped = useMemo(() => {
     return data.reduce((acc: Record<string, typeof data>, l) => {
@@ -17,6 +19,32 @@ export default function UpcomingPage() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-2xl border bg-white p-4 shadow-sm">
+        <div className="mb-2 flex items-center justify-between">
+          <div className="font-semibold">Homework</div>
+        </div>
+        {hwLoading ? (
+          <div className="text-slate-500">Loading.</div>
+        ) : homework.length === 0 ? (
+          <div className="text-slate-500">No homework assigned.</div>
+        ) : (
+          <ul className="divide-y divide-slate-200">
+            {homework.map(h => (
+              <li key={h._id} className="flex flex-col items-start justify-between gap-2 py-2 sm:flex-row sm:items-center">
+                <div className="text-sm">
+                  <div className="font-medium">{h.text}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${h.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{h.status}</span>
+                  {h.status !== 'Completed' && (
+                    <button className="rounded-xl border px-3 py-1.5 hover:bg-slate-50" onClick={async()=>{ await updateHomework(h._id, { status: 'Completed' }); await refreshHW(); }}>Mark Completed</button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="text-xl font-semibold">{format(cursor, "MMMM yyyy")}</div>

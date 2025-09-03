@@ -4,6 +4,10 @@ import { api } from "../lib/api";
 export type Student = {
   _id: string;
   name: string;
+  address?: string;
+  dateOfBirth?: string; // ISO
+  parentName?: string;
+  parentPhone?: string;
   program: "One-on-one" | "Group";
   ageGroup?: "6-9" | "10-14" | "15+";
   monthlyFee?: number;
@@ -47,6 +51,10 @@ export function useStudents(params?: {
 
 export async function createStudent(payload: {
   name: string;
+  address?: string;
+  dateOfBirth?: string; // ISO date (YYYY-MM-DD)
+  parentName?: string;
+  parentPhone?: string;
   email: string; // portal account email
   program: Student["program"];
   ageGroup?: NonNullable<Student["ageGroup"]>;
@@ -57,6 +65,10 @@ export async function createStudent(payload: {
   const student: Student = {
     _id: String(d._id ?? d.student?._id),
     name: d.name ?? d.student?.name,
+    address: d.address ?? d.student?.address,
+    dateOfBirth: d.dateOfBirth ?? d.student?.dateOfBirth,
+    parentName: d.parentName ?? d.student?.parentName,
+    parentPhone: d.parentPhone ?? d.student?.parentPhone,
     program: d.program ?? d.student?.program,
     ageGroup: d.ageGroup ?? d.student?.ageGroup,
     monthlyFee: d.monthlyFee ?? d.student?.monthlyFee,
@@ -69,4 +81,14 @@ export async function createStudent(payload: {
 export async function updateStudent(id: string, patch: Partial<Student>) {
   const r = await api.put(`/students/${id}`, patch);
   return r.data as Student;
+}
+
+export async function getStudent(id: string) {
+  const r = await api.get(`/students/${id}`);
+  return r.data as Student;
+}
+
+export async function getMyStudents() {
+  const r = await api.get(`/students/me/list`);
+  return r.data as Student[];
 }

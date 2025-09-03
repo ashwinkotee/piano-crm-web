@@ -1,6 +1,7 @@
 import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth";
 import UpcomingPage from "../views/portal/UpcomingPage";
+import ProfilePage from "../views/portal/ProfilePage";
 
 export default function PortalApp() {
   const nav = useNavigate();
@@ -13,6 +14,7 @@ export default function PortalApp() {
           <div className="font-semibold text-center sm:text-left">Learn Music with Ashwin - Student Portal</div>
           <nav className="flex flex-wrap items-center justify-center gap-2 text-sm sm:justify-end">
             <Tab to="/portal/upcoming" label="Upcoming" />
+            <Tab to="/portal/profile" label="Profile" />
             <button onClick={doLogout} className="rounded-lg border px-3 py-1.5 hover:bg-slate-100">Logout</button>
           </nav>
         </div>
@@ -23,6 +25,7 @@ export default function PortalApp() {
           <Route index element={<UpcomingPage />} />
           {/* Use relative path to nest under /portal */}
           <Route path="upcoming" element={<UpcomingPage />} />
+          <Route path="profile" element={<ProfilePage />} />
           <Route path="*" element={<div className="text-slate-600">Pick a tab.</div>} />
         </Routes>
       </main>

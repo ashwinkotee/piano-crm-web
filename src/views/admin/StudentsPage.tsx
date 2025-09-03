@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import Modal from "../../components/ui/Modal";
 import type { Student } from "../../hooks/students";
 import { useStudents, createStudent, updateStudent } from "../../hooks/students";
@@ -92,7 +93,9 @@ function StudentTable({ items, onEdit }:{
               : "-";
             return (
               <tr key={s._id} className="border-t">
-                <td className="p-2 font-medium">{s.name}</td>
+                <td className="p-2 font-medium text-indigo-700 underline decoration-indigo-200 underline-offset-2">
+                  <Link to={`/admin/students/${s._id}`}>{s.name}</Link>
+                </td>
                 <td className="p-2">{s.program}</td>
                 <td className="p-2">{s.ageGroup || "-"}</td>
                 <td className="p-2 text-slate-600">{displaySlot}</td>
@@ -122,6 +125,10 @@ function AddStudentModal({
   onCreated
 }:{ onClose: ()=>void; onCreated: (res: Awaited<ReturnType<typeof createStudent>>) => void }) {
   const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [parentName, setParentName] = useState("");
+  const [parentPhone, setParentPhone] = useState("");
   const [email, setEmail] = useState("");
   const [program, setProgram] = useState<"One-on-one"|"Group">("One-on-one");
   const [ageGroup, setAgeGroup] = useState<"6-9"|"10-14"|"15+">("6-9");
@@ -133,7 +140,17 @@ function AddStudentModal({
     e.preventDefault();
     setErr(null); setSaving(true);
     try {
-      const payload = { name, email, program, ageGroup: program === "Group" ? ageGroup : undefined, monthlyFee };
+      const payload = {
+        name,
+        address: address || undefined,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth).toISOString() : undefined,
+        parentName: parentName || undefined,
+        parentPhone: parentPhone || undefined,
+        email,
+        program,
+        ageGroup: program === "Group" ? ageGroup : undefined,
+        monthlyFee,
+      };
       const res = await createStudent(payload);
       onCreated(res);
     } catch (e: any) {
@@ -146,6 +163,21 @@ function AddStudentModal({
     <Modal onClose={onClose} title="Add Student">
       <form onSubmit={submit} className="space-y-3">
         <input className="w-full rounded-xl border px-3 py-2" placeholder="Student name" value={name} onChange={e=>setName(e.target.value)} />
+        <input className="w-full rounded-xl border px-3 py-2" placeholder="Address" value={address} onChange={e=>setAddress(e.target.value)} />
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <label className="text-sm">
+            <div className="text-slate-600">Date of Birth</div>
+            <input type="date" className="w-full rounded-xl border px-3 py-2" value={dateOfBirth} onChange={e=>setDateOfBirth(e.target.value)} />
+          </label>
+          <label className="text-sm">
+            <div className="text-slate-600">Parent/guardian name</div>
+            <input className="w-full rounded-xl border px-3 py-2" value={parentName} onChange={e=>setParentName(e.target.value)} />
+          </label>
+          <label className="text-sm">
+            <div className="text-slate-600">Parent/guardian phone</div>
+            <input className="w-full rounded-xl border px-3 py-2" value={parentPhone} onChange={e=>setParentPhone(e.target.value)} />
+          </label>
+        </div>
         <input className="w-full rounded-xl border px-3 py-2" placeholder="Portal email (parent/student)" value={email} onChange={e=>setEmail(e.target.value)} />
         <div className="grid grid-cols-2 gap-2">
           <select className="rounded-xl border px-3 py-2" value={program} onChange={e=>setProgram(e.target.value as any)}>
