@@ -134,6 +134,10 @@ function StudentHomework({ studentId }:{ studentId: string }){
   const { items, loading, error, refresh } = useStudentHomework(studentId);
   const [openAdd, setOpenAdd] = useState(false);
   const [editItem, setEditItem] = useState<Homework | null>(null);
+  const [showPast, setShowPast] = useState(false);
+
+  const current = items.filter(i => i.status !== 'Completed');
+  const past = items.filter(i => i.status === 'Completed');
   return (
     <div className="rounded-2xl border bg-white p-4 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
@@ -142,26 +146,74 @@ function StudentHomework({ studentId }:{ studentId: string }){
       </div>
       {loading ? <div className="text-slate-500">Loading.</div>
         : error ? <div className="text-rose-600">{error}</div>
-        : items.length === 0 ? <div className="text-slate-500">No homework yet.</div>
         : (
-          <ul className="divide-y divide-slate-200">
-            {items.map(h => (
-              <li key={h._id} className="flex flex-col items-start justify-between gap-2 py-2 sm:flex-row sm:items-center">
-                <div className="text-sm">
-                  <div className="font-medium">{h.text}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${h.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{h.status}</span>
-                  <Button variant="secondary" size="sm" onClick={()=>setEditItem(h)}>Edit</Button>
-                  <Button variant="danger" size="sm" onClick={async()=>{
-                    if (!confirm('Delete this homework?')) return;
-                    await deleteHomework(h._id);
-                    await refresh();
-                  }}>Delete</Button>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-4">
+            <div>
+              <div className="mb-2 text-sm font-semibold text-slate-700">Current</div>
+              {current.length === 0 ? (
+                <div className="text-slate-500">No current homework.</div>
+              ) : (
+                <ul className="space-y-2">
+                  {current.map(h => (
+                    <li key={h._id} className="relative rounded-xl border bg-amber-50 p-3 shadow-sm">
+                      <div className="absolute -left-1 top-3 h-2 w-2 rounded-full bg-amber-400"></div>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-sm">
+                          <div className="font-medium">{h.text}</div>
+                          <div className="text-xs text-slate-500">Assigned on {new Date(h.createdAt).toLocaleDateString()}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${h.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{h.status}</span>
+                          <Button variant="secondary" size="sm" onClick={()=>setEditItem(h)}>Edit</Button>
+                          <Button variant="danger" size="sm" onClick={async()=>{
+                            if (!confirm('Delete this homework?')) return;
+                            await deleteHomework(h._id);
+                            await refresh();
+                          }}>Delete</Button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <div className="text-sm font-semibold text-slate-700">Past</div>
+                <button className="text-sm text-slate-600 underline" onClick={()=>setShowPast(v=>!v)}>
+                  {showPast ? 'Hide' : 'Show'} past ({past.length})
+                </button>
+              </div>
+              {showPast && (
+                past.length === 0 ? (
+                  <div className="text-slate-500">No past homework.</div>
+                ) : (
+                  <ul className="space-y-2">
+                    {past.map(h => (
+                      <li key={h._id} className="relative rounded-xl border bg-slate-50 p-3">
+                        <div className="absolute -left-1 top-3 h-2 w-2 rounded-full bg-slate-300"></div>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="text-sm">
+                            <div className="font-medium">{h.text}</div>
+                            <div className="text-xs text-slate-500">Assigned on {new Date(h.createdAt).toLocaleDateString()}</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">Completed</span>
+                            <Button variant="secondary" size="sm" onClick={()=>setEditItem(h)}>Edit</Button>
+                            <Button variant="danger" size="sm" onClick={async()=>{
+                              if (!confirm('Delete this homework?')) return;
+                              await deleteHomework(h._id);
+                              await refresh();
+                            }}>Delete</Button>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )
+              )}
+            </div>
+          </div>
         )}
       {openAdd && <AddHomeworkModal studentId={studentId} onClose={()=>setOpenAdd(false)} onSaved={async()=>{ setOpenAdd(false); await refresh(); }} />}
       {editItem && <EditHomeworkModal item={editItem} onClose={()=>setEditItem(null)} onSaved={async()=>{ setEditItem(null); await refresh(); }} />}
@@ -222,4 +274,3 @@ function EditHomeworkModal({ item, onClose, onSaved }:{ item: Homework; onClose:
     </Modal>
   );
 }
-
