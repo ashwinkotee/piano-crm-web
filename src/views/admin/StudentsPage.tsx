@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Modal from "../../components/ui/Modal";
 import type { Student } from "../../hooks/students";
 import { useStudents, createStudent, updateStudent } from "../../hooks/students";
+import { useGroups, addGroupMembers } from "../../hooks/groups";
 
 const WEEKDAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"] as const;
 
@@ -131,10 +132,11 @@ function AddStudentModal({
   const [parentPhone, setParentPhone] = useState("");
   const [email, setEmail] = useState("");
   const [program, setProgram] = useState<"One-on-one"|"Group">("One-on-one");
-  const [ageGroup, setAgeGroup] = useState<"6-9"|"10-14"|"15+">("6-9");
   const [monthlyFee, setMonthlyFee] = useState<number>(200);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const { data: groups } = useGroups();
+  const [groupId, setGroupId] = useState<string>("");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -148,10 +150,12 @@ function AddStudentModal({
         parentPhone: parentPhone || undefined,
         email,
         program,
-        ageGroup: program === "Group" ? ageGroup : undefined,
         monthlyFee,
       };
       const res = await createStudent(payload);
+      if (program === "Group" && groupId) {
+        await addGroupMembers(groupId, [res.student._id]);
+      }
       onCreated(res);
     } catch (e: any) {
       setErr(e?.response?.data?.error || "Could not create student");
@@ -185,10 +189,11 @@ function AddStudentModal({
             <option>Group</option>
           </select>
           {program === "Group" ? (
-            <select className="rounded-xl border px-3 py-2" value={ageGroup} onChange={e=>setAgeGroup(e.target.value as any)}>
-              <option value="6-9">Age 6-9</option>
-              <option value="10-14">Age 10-14</option>
-              <option value="15+">Age 15+</option>
+            <select className="rounded-xl border px-3 py-2" value={groupId} onChange={e=>setGroupId(e.target.value)}>
+              <option value="">Select group</option>
+              {groups.map(g => (
+                <option key={g._id} value={g._id}>{g.name}</option>
+              ))}
             </select>
           ) : <div />}
         </div>

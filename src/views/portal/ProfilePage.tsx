@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { getMyStudents, type Student } from "../../hooks/students";
+import { useAuth } from "../../store/auth";
 
 export default function ProfilePage() {
   const [items, setItems] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     let mounted = true;
@@ -30,12 +32,19 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-2xl border bg-white p-4 shadow-sm">
+        <div className="mb-2 text-lg font-semibold">Account</div>
+        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Email" value={user?.email || "-"} />
+        </dl>
+      </div>
       {items.map((s) => (
         <div key={s._id} className="rounded-2xl border bg-white p-4 shadow-sm">
           <div className="mb-2 text-lg font-semibold">{s.name}</div>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Name" value={s.name} />
             <Field label="Class Type" value={s.program} />
+            <Field label="Email" value={user?.email || "-"} />
             <Field label="Date of Birth" value={s.dateOfBirth ? new Date(s.dateOfBirth).toLocaleDateString() : "-"} />
             <Field label="Address" value={s.address || "-"} />
             <Field label="Parent/guardian Name" value={s.parentName || "-"} />
@@ -55,4 +64,3 @@ function Field({ label, value }:{ label: string; value: string }){
     </div>
   );
 }
-

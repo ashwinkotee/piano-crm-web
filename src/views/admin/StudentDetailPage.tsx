@@ -5,9 +5,11 @@ import { useStudentHomework, addHomework, updateHomework, deleteHomework, type H
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 
+type StudentWithPortal = Student & { portalUser?: { email?: string } };
+
 export default function StudentDetailPage() {
   const { id = "" } = useParams();
-  const [student, setStudent] = useState<Student | null>(null);
+  const [student, setStudent] = useState<StudentWithPortal | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -47,6 +49,7 @@ export default function StudentDetailPage() {
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Name" value={student.name} />
           <Field label="Class Type" value={student.program} />
+          <Field label="Email" value={student.portalUser?.email || "-"} />
           <Field label="Date of Birth" value={student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString() : "-"} />
           <Field label="Address" value={student.address || "-"} />
           <Field label="Parent/guardian Name" value={student.parentName || "-"} />

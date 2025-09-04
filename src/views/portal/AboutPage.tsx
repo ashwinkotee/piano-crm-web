@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function AboutPage() {
   return (
     <div className="space-y-4">
@@ -18,4 +16,3 @@ export default function AboutPage() {
     </div>
   );
 }
-
