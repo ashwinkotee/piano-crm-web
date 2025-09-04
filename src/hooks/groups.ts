@@ -52,3 +52,7 @@ export async function scheduleGroupSessions(id: string, payload: { dates: string
   return r.data as { ok: true; created: number };
 }
 
+export async function deleteGroup(id: string) {
+  const r = await api.delete(`/groups/${id}`);
+  return r.data as { ok: true };
+}

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
-import { useGroups, createGroup, updateGroup, scheduleGroupSessions, type Group } from "../../hooks/groups";
+import { useGroups, createGroup, updateGroup, scheduleGroupSessions, deleteGroup, type Group } from "../../hooks/groups";
 import { useStudents, type Student } from "../../hooks/students";
 
 export default function GroupsPage() {
@@ -50,6 +50,16 @@ export default function GroupsPage() {
                     <div className="flex justify-end gap-2">
                       <Button variant="secondary" onClick={() => setEditing(g)}>Edit</Button>
                       <Button onClick={() => setScheduling(g)}>Schedule</Button>
+                      <Button
+                        variant="danger"
+                        onClick={async () => {
+                          if (!confirm(`Delete group "${g.name}"? This will hide it from lists.`)) return;
+                          await deleteGroup(g._id);
+                          await refresh();
+                        }}
+                      >
+                        Delete
+                      </Button>
                     </div>
                   </td>
                 </tr>
