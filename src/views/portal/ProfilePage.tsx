@@ -32,12 +32,6 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border bg-white p-4 shadow-sm">
-        <div className="mb-2 text-lg font-semibold">Account</div>
-        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Email" value={user?.email || "-"} />
-        </dl>
-      </div>
       {items.map((s) => (
         <div key={s._id} className="rounded-2xl border bg-white p-4 shadow-sm">
           <div className="mb-2 text-lg font-semibold">{s.name}</div>

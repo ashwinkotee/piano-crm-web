@@ -13,6 +13,8 @@ export type Student = {
   monthlyFee?: number;
   active: boolean;
   portalUserId?: string;
+  termsAccepted?: boolean;
+  termsAcceptedAt?: string;
 };
 
 export function useStudents(params?: {
@@ -91,4 +93,9 @@ export async function getStudent(id: string) {
 export async function getMyStudents() {
   const r = await api.get(`/students/me/list`);
   return r.data as Student[];
+}
+
+export async function acceptMyTerms() {
+  const r = await api.post(`/students/me/accept-terms`, {});
+  return r.data as { updated: number; at: string };
 }

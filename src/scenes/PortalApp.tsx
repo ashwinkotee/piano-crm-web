@@ -13,7 +13,7 @@ export default function PortalApp() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b bg-white">
-        <div className="mx-auto max-w-4xl px-4 py-3 flex flex-col gap-2 sm:h-14 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto w-full max-w-6xl px-3 py-3 flex flex-col gap-2 sm:h-14 sm:flex-row sm:items-center sm:justify-between sm:px-4">
           <div className="font-semibold text-center sm:text-left">Learn Music with Ashwin - Student Portal</div>
           <nav className="flex flex-wrap items-center justify-center gap-2 text-sm sm:justify-end">
             <Tab to="/portal/home" label="Home" />
@@ -22,7 +22,7 @@ export default function PortalApp() {
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-4xl px-4 py-6 flex-1">
+      <main className="mx-auto w-full max-w-6xl px-3 py-6 flex-1 sm:px-4">
         <Routes>
           {/* Default to home when visiting /portal */}
           <Route index element={<UpcomingPage />} />
@@ -36,7 +36,7 @@ export default function PortalApp() {
         </Routes>
       </main>
       <footer className="border-t bg-white">
-        <div className="mx-auto max-w-4xl px-4 py-4 text-sm text-slate-600 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto w-full max-w-6xl px-3 py-4 text-sm text-slate-600 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:px-4">
           <div>© Learn Music with Ashwin</div>
           <nav className="flex flex-wrap gap-4">
             <NavLink to="/portal/terms" className="hover:text-slate-900">Terms & Fees</NavLink>

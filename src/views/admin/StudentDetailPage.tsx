@@ -36,7 +36,14 @@ export default function StudentDetailPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-xl font-semibold">{student.name}</div>
+          <div className="flex items-center gap-3">
+            <div className="text-xl font-semibold">{student.name}</div>
+            {student.termsAccepted ? (
+              <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">Accepted</span>
+            ) : (
+              <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">Not accepted</span>
+            )}
+          </div>
           <div className="text-sm text-slate-500">Student details</div>
         </div>
         <div className="flex items-center gap-2">
