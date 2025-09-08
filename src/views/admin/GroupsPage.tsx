@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
-import { useGroups, createGroup, updateGroup, scheduleGroupSessions, deleteGroup, type Group } from "../../hooks/groups";
+import { useGroups, createGroup, updateGroup, scheduleGroupSessions, deleteGroup, type Group, type GroupMeta } from "../../hooks/groups";
 import { useStudents, type Student } from "../../hooks/students";
 
 export default function GroupsPage() {
@@ -12,6 +12,7 @@ export default function GroupsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<Group | null>(null);
   const [scheduling, setScheduling] = useState<Group | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   return (
     <div className="space-y-6">
@@ -23,6 +24,11 @@ export default function GroupsPage() {
         <Button onClick={() => setShowCreate(true)}>New Group</Button>
       </div>
 
+      {notice && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+          {notice}
+        </div>
+      )}
       <div className="rounded-2xl border bg-white p-4 shadow-sm overflow-x-auto">
         {loading ? (
           <div className="text-slate-500">Loading.</div>
@@ -74,7 +80,15 @@ export default function GroupsPage() {
           title="Create group"
           students={students}
           onClose={() => setShowCreate(false)}
-          onSave={async (p) => { await createGroup(p); setShowCreate(false); await refresh(); }}
+          onSave={async (p) => {
+            const res = await createGroup(p);
+            setShowCreate(false);
+            await refresh();
+            const m = res.meta;
+            setNotice(`Group created. Members: ${m.addedMembers}. Lessons added: ${m.createdLessons}.`);
+            setTimeout(() => setNotice(null), 4000);
+            return res;
+          }}
         />
       )}
 
@@ -84,7 +98,15 @@ export default function GroupsPage() {
           group={editing}
           students={students}
           onClose={() => setEditing(null)}
-          onSave={async (p) => { await updateGroup(editing._id, p); setEditing(null); await refresh(); }}
+          onSave={async (p) => {
+            const res = await updateGroup(editing._id, p);
+            setEditing(null);
+            await refresh();
+            const m = res.meta as GroupMeta;
+            setNotice(`Group saved. Added members: ${m.addedMembers}, removed members: ${m.removedMembers}. Lessons added: ${m.createdLessons}, removed: ${m.removedLessons}.`);
+            setTimeout(() => setNotice(null), 5000);
+            return res;
+          }}
         />
       )}
 
@@ -104,7 +126,7 @@ function UpsertModal({ title, group, students, onClose, onSave }:{
   group?: Group;
   students: Student[];
   onClose: ()=>void;
-  onSave: (p:{ name: string; description?: string; memberIds: string[] })=>void;
+  onSave: (p:{ name: string; description?: string; memberIds: string[] })=>Promise<any>;
 }) {
   const [name, setName] = useState(group?.name || "");
   const [description, setDescription] = useState(group?.description || "");
@@ -143,6 +165,9 @@ function UpsertModal({ title, group, students, onClose, onSave }:{
               </li>
             ))}
           </ul>
+          <div className="mt-2 text-xs text-slate-500">
+            Saving will sync upcoming group lessons: newly checked students will receive all future sessions for this group; unchecked students will have their future sessions removed.
+          </div>
         </div>
         {err && <div className="text-sm text-rose-600">{err}</div>}
         <div className="flex items-center justify-end gap-2 pt-2">

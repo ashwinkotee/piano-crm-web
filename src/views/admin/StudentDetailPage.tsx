@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getStudent, type Student, updateStudent } from "../../hooks/students";
+import { useGroups, addGroupMembers } from "../../hooks/groups";
 import { useStudentHomework, addHomework, updateHomework, deleteHomework, type Homework } from "../../hooks/homework";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
@@ -12,6 +13,22 @@ export default function StudentDetailPage() {
   const [student, setStudent] = useState<StudentWithPortal | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const { data: groups } = useGroups();
+
+  const WEEKDAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"] as const;
+  const displaySlot = useMemo(() => {
+    const slot: any = (student as any)?.defaultSlot;
+    if (!slot || typeof slot.weekday !== 'number' || !slot.time) return '-';
+    const wd = WEEKDAYS[slot.weekday] || '';
+    return `${wd} ${slot.time}`;
+  }, [student]);
+
+  const groupNames = useMemo(() => {
+    if (!student) return '-';
+    const names = groups.filter(g => g.memberIds.includes(student._id)).map(g => g.name);
+    return names.length ? names.join(', ') : '-';
+  }, [groups, student]);
 
   useEffect(() => {
     let mounted = true;
@@ -34,6 +51,11 @@ export default function StudentDetailPage() {
 
   return (
     <div className="space-y-4">
+      {notice && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+          {notice}
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
@@ -45,9 +67,20 @@ export default function StudentDetailPage() {
             )}
           </div>
           <div className="text-sm text-slate-500">Student details</div>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">
+              Fee: ${student.monthlyFee ?? 0}
+            </span>
+            <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium ${student.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700'}`}>
+              {student.active ? 'Active' : 'Inactive'}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">
+              Slot: {displaySlot}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <EditStudentButton student={student} onSaved={async()=>{ const s = await getStudent(student._id); setStudent(s); }} />
+          <EditStudentButton student={student} onSaved={async()=>{ const s = await getStudent(student._id); setStudent(s); setNotice('Student saved successfully.'); setTimeout(()=>setNotice(null), 3000); }} />
           <Link to="/admin/students" className="rounded-xl border px-3 py-2 hover:bg-slate-50">Back</Link>
         </div>
       </div>
@@ -56,6 +89,10 @@ export default function StudentDetailPage() {
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Name" value={student.name} />
           <Field label="Class Type" value={student.program} />
+          <Field label="Group" value={groupNames} />
+          <Field label="Monthly Fee" value={`$${student.monthlyFee ?? 0}`} />
+          <Field label="Status" value={student.active ? 'Active' : 'Inactive'} />
+          <Field label="Default Weekly Slot" value={displaySlot} />
           <Field label="Email" value={student.portalUser?.email || "-"} />
           <Field label="Date of Birth" value={student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString() : "-"} />
           <Field label="Address" value={student.address || "-"} />
@@ -94,6 +131,23 @@ function EditStudentModal({ student, onClose, onSaved }:{ student: Student; onCl
   const [dateOfBirth, setDateOfBirth] = useState(student.dateOfBirth ? student.dateOfBirth.slice(0,10) : "");
   const [parentName, setParentName] = useState(student.parentName || "");
   const [parentPhone, setParentPhone] = useState(student.parentPhone || "");
+  const [program, setProgram] = useState<Student["program"]>(student.program);
+  const { data: groups } = useGroups();
+  const preselectedGroupId = useMemo(() => {
+    const g = groups.find(g => g.memberIds.includes(student._id));
+    return g?._id || "";
+  }, [groups, student._id]);
+  const [groupId, setGroupId] = useState<string>(preselectedGroupId);
+  useEffect(() => {
+    // Keep selection in sync if groups load later
+    if (!groupId && preselectedGroupId) setGroupId(preselectedGroupId);
+  }, [preselectedGroupId]);
+  const [monthlyFee, setMonthlyFee] = useState<number>(student.monthlyFee ?? 0);
+  const [active, setActive] = useState<boolean>(student.active);
+  // weekly slot
+  const existing: any = (student as any).defaultSlot || {};
+  const [weekday, setWeekday] = useState<number>(typeof existing.weekday === 'number' ? existing.weekday : 2);
+  const [time, setTime] = useState<string>(typeof existing.time === 'string' ? existing.time : '17:00');
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string|null>(null);
 
@@ -106,7 +160,14 @@ function EditStudentModal({ student, onClose, onSaved }:{ student: Student; onCl
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth).toISOString() : undefined,
         parentName: parentName || undefined,
         parentPhone: parentPhone || undefined,
+        program,
+        monthlyFee,
+        active,
+        defaultSlot: { weekday, time },
       } as any);
+      if (program === 'Group' && groupId) {
+        await addGroupMembers(groupId, [student._id]);
+      }
       onSaved();
     } catch (e:any) { setErr(e?.response?.data?.error || "Could not save"); setSaving(false); }
   }
@@ -129,6 +190,62 @@ function EditStudentModal({ student, onClose, onSaved }:{ student: Student; onCl
             <div className="text-slate-600">Parent/guardian phone</div>
             <input className="w-full rounded-xl border px-3 py-2" value={parentPhone} onChange={e=>setParentPhone(e.target.value)} />
           </label>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <label className="text-sm">
+            <div className="text-slate-600">Program</div>
+            <select className="w-full rounded-xl border px-3 py-2" value={program} onChange={e=>setProgram(e.target.value as any)}>
+              <option>One-on-one</option>
+              <option>Group</option>
+            </select>
+          </label>
+          {program === 'Group' ? (
+            <label className="text-sm">
+              <div className="text-slate-600">Group</div>
+              <select className="w-full rounded-xl border px-3 py-2" value={groupId} onChange={e=>setGroupId(e.target.value)}>
+                <option value="">Select group</option>
+                {groups.map(g => (
+                  <option key={g._id} value={g._id}>{g.name}</option>
+                ))}
+              </select>
+              <div className="mt-1 text-xs text-slate-500">Use Groups page to remove from previous group(s).</div>
+            </label>
+          ) : <div />}
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <label className="text-sm">
+            <div className="text-slate-600">Monthly fee</div>
+            <input className="w-full rounded-xl border px-3 py-2" type="number" value={monthlyFee} onChange={e=>setMonthlyFee(Number(e.target.value))} />
+          </label>
+          <label className="text-sm flex items-end gap-2">
+            <input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)} />
+            <span>Active</span>
+          </label>
+        </div>
+
+        <div className="rounded-xl border bg-slate-50 p-3">
+          <div className="mb-2 text-sm font-medium text-slate-700">Default weekly slot</div>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="text-sm">
+              <div className="text-slate-600">Weekday</div>
+              <select className="w-full rounded-xl border px-3 py-2" value={weekday} onChange={e=>setWeekday(Number(e.target.value))}>
+                <option value={0}>Sunday</option>
+                <option value={1}>Monday</option>
+                <option value={2}>Tuesday</option>
+                <option value={3}>Wednesday</option>
+                <option value={4}>Thursday</option>
+                <option value={5}>Friday</option>
+                <option value={6}>Saturday</option>
+              </select>
+            </label>
+            <label className="text-sm">
+              <div className="text-slate-600">Start time</div>
+              <input type="time" className="w-full rounded-xl border px-3 py-2" value={time} onChange={e=>setTime(e.target.value)} />
+            </label>
+          </div>
+          <div className="mt-1 text-xs text-slate-500">Used by "Generate Month" to create 4 lessons automatically.</div>
         </div>
         {err && <div className="text-sm text-rose-600">{err}</div>}
         <div className="flex items-center justify-end gap-2 pt-2">

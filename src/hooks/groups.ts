@@ -9,6 +9,13 @@ export type Group = {
   active: boolean;
 };
 
+export type GroupMeta = {
+  createdLessons: number;
+  removedLessons: number;
+  addedMembers: number;
+  removedMembers: number;
+};
+
 export function useGroups() {
   const [data, setData] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,17 +41,17 @@ export function useGroups() {
 
 export async function createGroup(payload: { name: string; description?: string; memberIds: string[] }) {
   const r = await api.post("/groups", payload);
-  return r.data as Group;
+  return r.data as { group: Group; meta: GroupMeta };
 }
 
 export async function updateGroup(id: string, payload: { name: string; description?: string; memberIds: string[] }) {
   const r = await api.put(`/groups/${id}`, payload);
-  return r.data as Group;
+  return r.data as { group: Group; meta: GroupMeta };
 }
 
 export async function addGroupMembers(id: string, memberIds: string[]) {
   const r = await api.post(`/groups/${id}/add-members`, { memberIds });
-  return r.data as Group;
+  return r.data as { group: Group; meta: GroupMeta };
 }
 
 export async function scheduleGroupSessions(id: string, payload: { dates: string[]; durationMinutes: number; notes?: string }) {
