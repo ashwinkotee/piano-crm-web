@@ -80,7 +80,7 @@ export default function StudentDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <AddSiblingButton baseStudent={student} onAdded={async(sid)=>{ /* reload to reflect sibling presence if needed */ setNotice('Sibling added successfully.'); setTimeout(()=>setNotice(null), 3000); }} />
+          <AddSiblingButton baseStudent={student} onAdded={async(sid)=>{ void sid; /* reload to reflect sibling presence if needed */ setNotice('Sibling added successfully.'); setTimeout(()=>setNotice(null), 3000); }} />
           <EditStudentButton student={student} onSaved={async()=>{ const s = await getStudent(student._id); setStudent(s); setNotice('Student saved successfully.'); setTimeout(()=>setNotice(null), 3000); }} />
           <Link to="/admin/students" className="rounded-xl border px-3 py-2 hover:bg-slate-50">Back</Link>
         </div>
