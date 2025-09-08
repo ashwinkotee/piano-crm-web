@@ -2,9 +2,86 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Portal experimental theme */
+:root {
+  --portal-accent: 99 102 241; /* indigo-500 */
+}
+
+/* Soft animated gradient background for the portal area (neo) */
+.portal-bg {
+  /* Soften dark theme gradient background. Avoid fixed attachment on mobile to
+     prevent white banding/overflow artifacts in some browsers. */
+  background: radial-gradient(1200px 600px at 10% -10%, rgba(99,102,241,0.2), transparent 60%),
+              radial-gradient(900px 500px at 90% 10%, rgba(56,189,248,0.18), transparent 60%),
+              linear-gradient(180deg, #0f172a 0%, #111827 60%, #0b1021 100%);
+}
+
+@media (min-width: 768px) {
+  /* Enable fixed attachment only on medium+ screens where browsers handle it better */
+  .portal-bg { background-attachment: fixed; }
+}
+
+/* Subtle entrance animation */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fadeUp 400ms ease-out both; }
+
+/* Card interaction */
+.card-hover {
+  transition: box-shadow 200ms ease, transform 200ms ease; 
+}
+.card-hover:hover { box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18); transform: translateY(-2px); }
+
+/* Fancy focus ring */
+.focus-ring:focus { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.45); }
+
+/* Glass panels */
+.glass { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(10px); }
+.glass-light { background: rgba(255,255,255,0.75); border: 1px solid rgba(15,23,42,0.08); backdrop-filter: blur(10px); }
+
+/* Ensure glass adapts automatically in light theme */
+.theme-light .glass { background: rgba(255,255,255,0.75); border: 1px solid rgba(15,23,42,0.08); }
+
+/* Neutral card that adapts with theme */
+.card-neutral { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #e5e7eb; }
+.theme-light .card-neutral { background: #ffffff; border: 1px solid rgba(15,23,42,0.08); color: #0f172a; }
+
+/* Titles */
+.section-title { background: linear-gradient(90deg, #f472b6, #60a5fa, #34d399); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* Chips */
+.chip { border-radius: 9999px; padding: 0.25rem 0.6rem; backdrop-filter: blur(4px); }
+
+/* Sidebar */
+.neo-sidebar { border-right: 1px solid rgba(255,255,255,0.12); }
+.theme-light .neo-sidebar { border-right-color: rgba(15,23,42,0.08); }
+
+
 @layer base {
   html, body, #root { height: 100%; }
-  body {
-    @apply bg-gradient-to-b from-slate-50 to-white text-slate-900 font-sans;
-  }
+  /* Avoid forcing dark text globally; let theme classes control it */
+  body { @apply font-sans; }
 }
+
+/* Theme overrides */
+.theme-light .portal-bg {
+  background: radial-gradient(1200px 600px at 10% -10%, rgba(99,102,241,0.12), transparent 60%),
+              radial-gradient(900px 500px at 90% 10%, rgba(56,189,248,0.12), transparent 60%),
+              linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+}
+
+/* Set text color by theme */
+.theme-dark body { color: #e5e7eb; background-color: #0b1021; }
+.theme-light body { color: #0f172a; background-color: #f8fafc; }
+
+/* Improve contrast for Tailwind slate text utilities in light theme
+   Many components use text-slate-100/200/300 which are too faint on light bg. */
+.theme-light .text-slate-300 { color: #334155 !important; } /* slate-700 */
+.theme-light .text-slate-200 { color: #475569 !important; } /* slate-600 */
+.theme-light .text-slate-100 { color: #0f172a !important; } /* slate-900 */
+.theme-light .text-white { color: #0f172a !important; }
+
+/* Links that previously hovered to white should hover darker in light theme */
+.theme-light a:hover { color: #0f172a; }

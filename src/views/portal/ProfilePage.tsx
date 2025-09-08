@@ -33,7 +33,7 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       {items.map((s) => (
-        <div key={s._id} className="rounded-2xl border bg-white p-4 shadow-sm">
+        <div key={s._id} className="card-neutral rounded-2xl p-4 shadow-sm">
           <div className="mb-2 text-lg font-semibold">{s.name}</div>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Name" value={s.name} />
@@ -53,7 +53,7 @@ export default function ProfilePage() {
 function Field({ label, value }:{ label: string; value: string }){
   return (
     <div>
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-xs uppercase tracking-wide opacity-70">{label}</div>
       <div className="mt-1 font-medium">{value}</div>
     </div>
   );
