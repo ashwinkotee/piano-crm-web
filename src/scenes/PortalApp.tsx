@@ -39,7 +39,7 @@ export default function PortalApp() {
         <div className="mx-auto w-full max-w-6xl px-3 py-4 text-sm text-slate-600 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:px-4">
           <div>© Learn Music with Ashwin</div>
           <nav className="flex flex-wrap gap-4">
-            <NavLink to="/portal/terms" className="hover:text-slate-900">Terms & Fees</NavLink>
+            <NavLink to="/portal/terms" className="hover:text-slate-900">Terms and Conditions</NavLink>
             <NavLink to="/portal/features" className="hover:text-slate-900">Portal Features</NavLink>
             <NavLink to="/portal/about" className="hover:text-slate-900">About</NavLink>
           </nav>

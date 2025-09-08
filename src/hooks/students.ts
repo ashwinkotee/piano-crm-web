@@ -99,3 +99,18 @@ export async function acceptMyTerms() {
   const r = await api.post(`/students/me/accept-terms`, {});
   return r.data as { updated: number; at: string };
 }
+
+export async function createSibling(baseStudentId: string, payload: {
+  name: string;
+  address?: string;
+  dateOfBirth?: string; // ISO date (YYYY-MM-DD)
+  parentName?: string;
+  parentPhone?: string;
+  program: Student["program"];
+  ageGroup?: NonNullable<Student["ageGroup"]>;
+  monthlyFee?: number;
+  defaultSlot?: { weekday: number; time: string };
+}) {
+  const r = await api.post(`/students/${baseStudentId}/siblings`, payload);
+  return r.data as Student;
+}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getStudent, type Student, updateStudent } from "../../hooks/students";
+import { getStudent, type Student, updateStudent, createSibling } from "../../hooks/students";
 import { useGroups, addGroupMembers } from "../../hooks/groups";
 import { useStudentHomework, addHomework, updateHomework, deleteHomework, type Homework } from "../../hooks/homework";
 import Modal from "../../components/ui/Modal";
@@ -80,6 +80,7 @@ export default function StudentDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <AddSiblingButton baseStudent={student} onAdded={async(sid)=>{ /* reload to reflect sibling presence if needed */ setNotice('Sibling added successfully.'); setTimeout(()=>setNotice(null), 3000); }} />
           <EditStudentButton student={student} onSaved={async()=>{ const s = await getStudent(student._id); setStudent(s); setNotice('Student saved successfully.'); setTimeout(()=>setNotice(null), 3000); }} />
           <Link to="/admin/students" className="rounded-xl border px-3 py-2 hover:bg-slate-50">Back</Link>
         </div>
@@ -112,6 +113,104 @@ function Field({ label, value }:{ label: string; value: string }){
       <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
       <div className="mt-1 font-medium">{value}</div>
     </div>
+  );
+}
+
+function AddSiblingButton({ baseStudent, onAdded }:{ baseStudent: Student; onAdded: (newId: string)=>void }){
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button onClick={()=>setOpen(true)}>Add Sibling</Button>
+      {open && <AddSiblingModal baseStudent={baseStudent} onClose={()=>setOpen(false)} onSaved={(id)=>{ setOpen(false); onAdded(id); }} />}
+    </>
+  );
+}
+
+function AddSiblingModal({ baseStudent, onClose, onSaved }:{ baseStudent: Student; onClose: ()=>void; onSaved: (id: string)=>void }){
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [parentName, setParentName] = useState("");
+  const [parentPhone, setParentPhone] = useState("");
+  const [program, setProgram] = useState<Student["program"]>("One-on-one");
+  const [monthlyFee, setMonthlyFee] = useState<number | undefined>(baseStudent.monthlyFee ?? undefined);
+  const [weekday, setWeekday] = useState<number | undefined>(undefined);
+  const [time, setTime] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string|null>(null);
+
+  async function submit(e: React.FormEvent){
+    e.preventDefault(); setErr(null); setSaving(true);
+    try {
+      const payload: any = {
+        name,
+        program,
+        address: address || undefined,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth).toISOString() : undefined,
+        parentName: parentName || undefined,
+        parentPhone: parentPhone || undefined,
+      };
+      if (typeof monthlyFee === 'number') payload.monthlyFee = monthlyFee;
+      if (typeof weekday === 'number' && time) payload.defaultSlot = { weekday, time };
+      const s = await createSibling(baseStudent._id, payload);
+      onSaved(s._id);
+    } catch(e:any){ setErr(e?.response?.data?.error || 'Could not create sibling'); setSaving(false); }
+  }
+
+  return (
+    <Modal title="Add Sibling" onClose={onClose}>
+      <form onSubmit={submit} className="space-y-3">
+        <div className="text-sm text-slate-600">This student will share the same portal account as <span className="font-medium">{baseStudent.name}</span>.</div>
+        <input className="w-full rounded-xl border px-3 py-2" placeholder="Student name" value={name} onChange={e=>setName(e.target.value)} required />
+        <input className="w-full rounded-xl border px-3 py-2" placeholder="Address" value={address} onChange={e=>setAddress(e.target.value)} />
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <label className="text-sm">
+            <div className="text-slate-600">Date of Birth</div>
+            <input type="date" className="w-full rounded-xl border px-3 py-2" value={dateOfBirth} onChange={e=>setDateOfBirth(e.target.value)} />
+          </label>
+          <label className="text-sm">
+            <div className="text-slate-600">Parent/guardian name</div>
+            <input className="w-full rounded-xl border px-3 py-2" value={parentName} onChange={e=>setParentName(e.target.value)} />
+          </label>
+          <label className="text-sm">
+            <div className="text-slate-600">Parent/guardian phone</div>
+            <input className="w-full rounded-xl border px-3 py-2" value={parentPhone} onChange={e=>setParentPhone(e.target.value)} />
+          </label>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <select className="rounded-xl border px-3 py-2" value={program} onChange={e=>setProgram(e.target.value as any)}>
+            <option>One-on-one</option>
+            <option>Group</option>
+          </select>
+          <div />
+        </div>
+        <input className="w-full rounded-xl border px-3 py-2" type="number" placeholder="Monthly fee" value={monthlyFee ?? ''} onChange={e=>setMonthlyFee(e.target.value === '' ? undefined : Number(e.target.value))} />
+        <div className="grid grid-cols-2 gap-3">
+          <label className="text-sm block">
+            <div className="text-slate-600">Default Weekday (optional)</div>
+            <select className="w-full rounded-xl border px-3 py-2" value={weekday ?? ''} onChange={e=>setWeekday(e.target.value === '' ? undefined : Number(e.target.value))}>
+              <option value="">None</option>
+              <option value={0}>Sunday</option>
+              <option value={1}>Monday</option>
+              <option value={2}>Tuesday</option>
+              <option value={3}>Wednesday</option>
+              <option value={4}>Thursday</option>
+              <option value={5}>Friday</option>
+              <option value={6}>Saturday</option>
+            </select>
+          </label>
+          <label className="text-sm block">
+            <div className="text-slate-600">Default Time (HH:mm)</div>
+            <input className="w-full rounded-xl border px-3 py-2" placeholder="15:30" value={time} onChange={e=>setTime(e.target.value)} />
+          </label>
+        </div>
+        {err && <div className="text-sm text-rose-600">{err}</div>}
+        <div className="flex items-center justify-end gap-2 pt-2">
+          <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
+          <Button disabled={saving}>{saving ? 'Adding…' : 'Create'}</Button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 

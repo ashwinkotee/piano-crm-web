@@ -1,17 +1,27 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLessons } from "../../hooks/lessons";
 import { addMonths, format, parse, startOfMonth } from "date-fns";
 import { useMyHomework, updateHomework } from "../../hooks/homework";
+import { getMyStudents, type Student } from "../../hooks/students";
 
 export default function UpcomingPage() {
   const [cursor, setCursor] = useState<Date>(startOfMonth(new Date()));
   const startISO = useMemo(() => format(cursor, "yyyy-MM-dd"), [cursor]);
-  const { data, loading } = useLessons({ view: "month", startISO });
-  const { items: homework, loading: hwLoading, refresh: refreshHW } = useMyHomework();
+  const [students, setStudents] = useState<Student[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { items: homeworkAll, loading: hwLoading, refresh: refreshHW } = useMyHomework();
   const [showPastHW, setShowPastHW] = useState(false);
 
-  const currentHomework = useMemo(() => homework.filter(h => h.status !== 'Completed'), [homework]);
-  const pastHomework = useMemo(() => homework.filter(h => h.status === 'Completed'), [homework]);
+  useEffect(() => { (async () => {
+    const s = await getMyStudents();
+    setStudents(s);
+    if (!selectedId && s.length) setSelectedId(s[0]._id);
+  })(); }, []);
+
+  const { data, loading } = useLessons({ view: "month", startISO, studentId: selectedId || undefined });
+
+  const currentHomework = useMemo(() => homeworkAll.filter(h => (!selectedId || h.studentId === selectedId) && h.status !== 'Completed'), [homeworkAll, selectedId]);
+  const pastHomework = useMemo(() => homeworkAll.filter(h => (!selectedId || h.studentId === selectedId) && h.status === 'Completed'), [homeworkAll, selectedId]);
 
   const grouped = useMemo(() => {
     return data.reduce((acc: Record<string, typeof data>, l) => {
@@ -23,9 +33,38 @@ export default function UpcomingPage() {
 
   return (
     <div className="space-y-6">
+      {/* Student Tabs */}
+      {students.length > 1 && (
+        <div className="border-b">
+          <div role="tablist" className="-mb-px flex w-full gap-2 overflow-x-auto">
+            {students.map((s) => {
+              const active = selectedId === s._id;
+              return (
+                <button
+                  key={s._id}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setSelectedId(s._id)}
+                  className={`cursor-pointer whitespace-nowrap rounded-t-lg px-4 py-2 text-sm transition-colors border-b-2 ${
+                    active
+                      ? 'border-slate-900 text-slate-900 font-semibold'
+                      : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300'
+                  }`}
+                >
+                  {s.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {students.length === 0 ? (
+        <div className="rounded-2xl border bg-white p-4 shadow-sm text-slate-500">No students linked to your account.</div>
+      ) : null}
       <div className="rounded-2xl border bg-white p-4 shadow-sm">
         <div className="mb-2 flex items-center justify-between">
-          <div className="font-semibold">Homework</div>
+          <div className="font-semibold">Homework{selectedId ? ` • ${(students.find(s=>s._id===selectedId)?.name) || ''}` : ''}</div>
         </div>
         {hwLoading ? (
           <div className="text-slate-500">Loading.</div>
@@ -122,10 +161,13 @@ export default function UpcomingPage() {
                   <li key={l._id} className="flex flex-col items-start justify-between gap-2 py-2 sm:flex-row sm:items-center">
                     <div className="flex items-center gap-3">
                       <div className="w-28 text-sm text-slate-500">
-                        {format(new Date(l.start), "p")} – {format(new Date(l.end), "p")}
+                        {format(new Date(l.start), "p")} - {format(new Date(l.end), "p")}
                       </div>
                       <div className="text-sm">
                         <div className="font-medium">{l.type === "one" ? "One-on-one" : "Group"}</div>
+                        {students.length > 1 && selectedId && (
+                          <div className="text-xs text-slate-500">{students.find(s=>s._id===selectedId)?.name}</div>
+                        )}
                         {l.notes && <div className="text-slate-500">{l.notes}</div>}
                       </div>
                     </div>
