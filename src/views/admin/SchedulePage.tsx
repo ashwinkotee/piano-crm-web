@@ -17,7 +17,7 @@ const fromLocalInput = (s: string) => new Date(s).toISOString();
 
 export default function SchedulePage() {
   const [cursor, setCursor] = useState<Date>(startOfMonth(new Date()));
-  const [mode, setMode] = useState<"list"|"calendar">("list");
+  const [mode, setMode] = useState<"list"|"calendar">("calendar");
   const startParam = useMemo(() => format(cursor, "yyyy-MM-dd"), [cursor]);
 
   const { data, loading, refresh } = useLessons({ view: "month", startISO: startParam });
@@ -106,7 +106,7 @@ function Toolbar({
 
 /* ---------- List view ---------- */
 function Card({ children }:{ children: React.ReactNode }) {
-  return <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">{children}</div>;
+  return <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card text-slate-900">{children}</div>;
 }
 function ListView({ loading, grouped, onEdit, studentById, groupById }:{
   loading: boolean; grouped: Record<string, Lesson[]>; onEdit: (l:Lesson)=>void; studentById: Record<string, { _id: string; name: string }>; groupById: Record<string, { _id: string; name: string }>;
@@ -233,11 +233,16 @@ function CalendarMonth({
             const inMonth = isSameMonth(d, monthDate);
             const items = dedupeGroupLessons(lessons.filter(l => isSameDay(new Date(l.start), d)));
             const weekend = [0,6].includes(d.getDay());
+            const today = isSameDay(d, new Date());
             return (
               <div key={d.toISOString()}
                    className={`min-h-[130px] bg-white p-2 ${inMonth ? "" : "bg-slate-50 text-slate-400"} ${weekend && inMonth ? "bg-slate-50" : ""}`}>
                 <div className="mb-1 flex items-center justify-between">
-                  <div className={`text-xs font-semibold ${inMonth ? "text-slate-700" : "text-slate-400"}`}>{format(d, "d")}</div>
+                  <div className={`text-xs font-semibold ${inMonth ? "text-slate-700" : "text-slate-400"}`}>
+                    <span className={`${today ? "inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-white" : ""}`}>
+                      {format(d, "d")}
+                    </span>
+                  </div>
                   <button
                     className="rounded-full border border-slate-300 px-2 text-xs text-slate-600 hover:bg-slate-100"
                     onClick={() => onAddForDate(d)}

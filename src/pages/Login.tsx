@@ -66,14 +66,14 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-white">
-      <form onSubmit={submit} className="w-full max-w-sm rounded-2xl border bg-white p-6 shadow-card space-y-3">
+      <form onSubmit={submit} className="w-full max-w-sm rounded-2xl border bg-white p-6 shadow-card space-y-3 text-slate-900">
         <div className="text-xl font-semibold">Sign in</div>
-        <div className="rounded-lg border border-slate-200 bg-slate-50 text-slate-600 text-xs p-3">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 text-slate-700 text-xs p-3">
           First-time sign-in may take up to a minute while the server starts.
           Thank you for your patience.
         </div>
-        <input className="w-full rounded-xl border px-3 py-2" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
-        <input className="w-full rounded-xl border px-3 py-2" placeholder="Password" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
+        <input className="w-full rounded-xl border px-3 py-2 text-slate-900 placeholder:text-slate-400" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
+        <input className="w-full rounded-xl border px-3 py-2 text-slate-900 placeholder:text-slate-400" placeholder="Password" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
         {err && <div className="text-sm text-rose-600">{err}</div>}
         <button
           disabled={loading}

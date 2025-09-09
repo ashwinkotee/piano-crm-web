@@ -88,7 +88,7 @@ export default function UpcomingPage() {
                               <div className="text-xs text-slate-300">Assigned on {new Date(h.createdAt).toLocaleDateString()}</div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="inline-flex rounded-full bg-amber-100/20 px-2.5 py-1 text-xs font-semibold text-amber-200">{h.status}</span>
+                              <span className={`portal-badge ${h.status === 'Completed' ? 'portal-badge-ok' : 'portal-badge-warn'}`}>{h.status}</span>
                               <button className="rounded-xl border border-white/20 bg-white/10 px-3 py-1.5 text-slate-100 hover:bg-white/20" onClick={async()=>{ await updateHomework(h._id, { status: 'Completed' }); await refreshHW(); }}>Mark Completed</button>
                             </div>
                           </div>
@@ -117,7 +117,7 @@ export default function UpcomingPage() {
                                 <div className="font-medium text-white">{h.text}</div>
                                 <div className="text-xs text-slate-300">Assigned on {new Date(h.createdAt).toLocaleDateString()}</div>
                               </div>
-                              <span className="inline-flex rounded-full bg-emerald-100/20 px-2.5 py-1 text-xs font-semibold text-emerald-200">Completed</span>
+                              <span className="portal-badge portal-badge-ok">Completed</span>
                             </div>
                           </li>
                         ))}
@@ -168,13 +168,10 @@ export default function UpcomingPage() {
                             {l.notes && <div className="text-slate-300">{l.notes}</div>}
                           </div>
                         </div>
-                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          l.status === 'Scheduled' ? 'bg-emerald-400/20 text-emerald-200'
-                            : l.status === 'Cancelled' ? 'bg-rose-400/20 text-rose-200'
-                            : 'bg-white/10 text-slate-200'
-                        }`}>
-                          {l.status}
-                        </span>
+                        <span className={`portal-badge ${
+                          l.status === 'Scheduled' ? 'portal-badge-ok' :
+                          l.status === 'Cancelled' ? 'portal-badge-danger' : 'portal-badge-muted'
+                        }`}>{l.status}</span>
                       </li>
                     ))}
                   </ul>

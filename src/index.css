@@ -85,3 +85,21 @@
 
 /* Links that previously hovered to white should hover darker in light theme */
 .theme-light a:hover { color: #0f172a; }
+
+/* Ensure readable text on light cards even in dark theme */
+.theme-dark .bg-white, .theme-dark .bg-slate-50 { color: #0f172a; }
+
+/* Portal badge tokens: readable in both themes */
+.portal-badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 0.25rem 0.625rem; font-size: 0.75rem; font-weight: 600; line-height: 1rem; border: 1px solid transparent; }
+
+/* Dark theme defaults */
+.theme-dark .portal-badge-ok { background: rgba(16,185,129,0.20); color: #a7f3d0; border-color: rgba(16,185,129,0.35); }
+.theme-dark .portal-badge-warn { background: rgba(251,191,36,0.20); color: #fde68a; border-color: rgba(251,191,36,0.35); }
+.theme-dark .portal-badge-danger { background: rgba(244,63,94,0.20); color: #fecaca; border-color: rgba(244,63,94,0.35); }
+.theme-dark .portal-badge-muted { background: rgba(255,255,255,0.10); color: #e5e7eb; border-color: rgba(255,255,255,0.20); }
+
+/* Light theme higher contrast */
+.theme-light .portal-badge-ok { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+.theme-light .portal-badge-warn { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.theme-light .portal-badge-danger { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+.theme-light .portal-badge-muted { background: #e5e7eb; color: #374151; border-color: #d1d5db; }
