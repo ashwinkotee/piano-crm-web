@@ -38,12 +38,13 @@ export default function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        credentials: "include",
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Login failed");
 
       // Persist and update auth store so Protected routes see the new state
-      setAuth(data.token, data.user);
+      setAuth(data.accessToken || data.token, data.user);
 
       // Fill the loading bar to 100% just before navigating
       setProgress(100);

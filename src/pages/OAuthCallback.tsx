@@ -6,7 +6,7 @@ export default function OAuthCallback() {
   const { setAuth } = useAuth();
   useEffect(() => {
     (async () => {
-      const r = await api.post("/auth/refresh"); // refresh cookie -> access token
+      const r = await api.post("/auth/refresh", {}); // refresh cookie -> access token
       const token = r.data.accessToken;
       const me = await api.get("/auth/me", { headers: { Authorization: `Bearer ${token}` } });
       setAuth(token, me.data);

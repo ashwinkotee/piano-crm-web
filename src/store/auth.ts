@@ -2,52 +2,59 @@
 import { create } from "zustand";
 import { api } from "../lib/api"; // axios instance with baseURL
 
-type User = { id: string; email: string; role: "admin" | "portal" };
+type User = { id?: string; _id?: string; email: string; role: "admin" | "portal"; mustChangePassword?: boolean };
 
 type AuthState = {
   user: User | null;
-  token: string | null;
+  token: string | null; // in-memory access token
   setAuth: (token: string, user: User) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
+// Migration note: read legacy localStorage once, then stop persisting going forward
+const legacyUser = (() => {
+  try { return JSON.parse(localStorage.getItem("user") || "null"); } catch { return null; }
+})();
+const legacyToken = localStorage.getItem("token");
+
 export const useAuth = create<AuthState>((set) => ({
-  user: (() => {
-  try {
-    return JSON.parse(localStorage.getItem("user") || "null");
-  } catch {
-    return null;
-  }
-})(),
-  token: localStorage.getItem("token"),
+  user: legacyUser,
+  token: legacyToken,
   setAuth: (token, user) => {
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
+    // Stop persisting tokens to storage; keep in memory only
+    try { localStorage.setItem("user", JSON.stringify(user)); } catch {}
     set({ token, user });
   },
-  logout: () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  logout: async () => {
+    try { await api.post("/auth/logout", {}); } catch {}
+    try { localStorage.removeItem("token"); localStorage.removeItem("user"); } catch {}
     set({ token: null, user: null });
   },
 }));
 
-// import { api } from "../lib/api";
-
+// Rehydrate using refresh cookie when available; fall back to legacy token
 export async function revalidateAuth() {
-  const token = localStorage.getItem("token");
+  try {
+    // Prefer refresh cookie flow
+    const r = await api.post("/auth/refresh", {});
+    const accessToken = r.data.accessToken as string;
+    const me = await api.get("/auth/me", { headers: { Authorization: `Bearer ${accessToken}` } });
+    useAuth.getState().setAuth(accessToken, me.data);
+    // Clean legacy storage
+    try { localStorage.removeItem("token"); } catch {}
+    return;
+  } catch {}
+
+  // Fallback: legacy token if present
+  const token = legacyToken;
   if (!token) {
-    useAuth.getState().logout();
+    await useAuth.getState().logout();
     return;
   }
-
   try {
-    const res = await api.get("/auth/me", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    useAuth.getState().setAuth(token, res.data); // keep backend as source of truth
+    const res = await api.get("/auth/me", { headers: { Authorization: `Bearer ${token}` } });
+    useAuth.getState().setAuth(token, res.data);
   } catch {
-    useAuth.getState().logout();
-    localStorage.removeItem("token");
+    await useAuth.getState().logout();
   }
 }
