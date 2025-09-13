@@ -9,7 +9,6 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
   const progressTimer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -24,15 +23,7 @@ export default function Login() {
     e.preventDefault();
     setErr(null);
     setLoading(true);
-    setProgress(10);
     if (progressTimer.current !== null) clearInterval(progressTimer.current);
-    progressTimer.current = window.setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 90) return prev;
-        const next = prev + Math.max(1, (90 - prev) * 0.12);
-        return Math.min(90, next);
-      });
-    }, 300) as unknown as number;
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
         method: "POST",
@@ -46,8 +37,7 @@ export default function Login() {
       // Persist and update auth store so Protected routes see the new state
       setAuth(data.accessToken || data.token, data.user);
 
-      // Fill the loading bar to 100% just before navigating
-      setProgress(100);
+      // Success: navigate to the appropriate area
       if (data.user.role === "portal" && data.user.mustChangePassword) {
         nav("/portal/change-password");
       } else {
@@ -61,7 +51,7 @@ export default function Login() {
         clearInterval(progressTimer.current);
         progressTimer.current = null;
       }
-      setTimeout(() => { setLoading(false); setProgress(0); }, 300);
+      setTimeout(() => { setLoading(false); }, 300);
     }
   }
 
@@ -79,9 +69,12 @@ export default function Login() {
         <button
           disabled={loading}
           aria-busy={loading}
-          className="w-full rounded-xl bg-indigo-600 text-white px-3 py-2 overflow-hidden disabled:opacity-80"
-          style={loading ? { backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.25), rgba(255,255,255,0.25))', backgroundSize: `${progress}% 100%`, backgroundRepeat: 'no-repeat' } : undefined}
+          className="w-full rounded-xl bg-indigo-600 text-white px-3 py-2 disabled:opacity-80 flex items-center justify-center gap-2"
+          
         >
+          {loading && (
+            <span aria-hidden="true" className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+          )}
           {loading ? "Signing in…" : "Sign in"}
         </button>
       </form>
