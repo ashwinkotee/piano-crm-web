@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { NavLink } from "react-router-dom";
 import { addMonths, format, parse, startOfMonth } from "date-fns";
 import { useLessons } from "../../hooks/lessons";
 import { useMyHomework, updateHomework } from "../../hooks/homework";
@@ -33,6 +34,15 @@ export default function UpcomingPage() {
 
   return (
     <div className="space-y-6">
+      {/* Terms disclaimer */}
+      {students.length > 0 && students.some(s => !s.termsAccepted) && (
+        <div className="rounded-xl border border-amber-300/30 bg-amber-50/80 p-3 text-amber-900">
+          <div className="text-sm">
+            Please review and accept the Terms and Conditions to continue using the portal. {" "}
+            <NavLink to="/portal/terms" className="underline font-medium">Review Terms</NavLink>
+          </div>
+        </div>
+      )}
       {/* Student Tabs */}
       {students.length > 1 && (
         <div className="mb-2">

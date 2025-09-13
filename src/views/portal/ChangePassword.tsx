@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../../lib/api";
+import { useAuth } from "../../store/auth";
 
 export default function ChangePassword() {
   const nav = useNavigate();
@@ -8,6 +10,7 @@ export default function ChangePassword() {
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { token } = useAuth();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -16,18 +19,14 @@ export default function ChangePassword() {
     if (pw1 !== pw2) { setErr("Passwords do not match"); return; }
     setLoading(true);
     try {
-      const token = localStorage.getItem("token") || "";
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:4000"}/auth/change-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ newPassword: pw1 }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not change password");
+      if (!token) throw new Error("Not authenticated");
+      const res = await api.post("/auth/change-password", { newPassword: pw1 });
+      if (res.status !== 200) throw new Error("Could not change password");
       setOk(true);
       setTimeout(() => nav("/portal"), 600);
     } catch (e: any) {
-      setErr(e.message || "Could not change password");
+      const msg = e?.response?.data?.error || e?.message || "Could not change password";
+      setErr(msg);
     } finally {
       setLoading(false);
     }
