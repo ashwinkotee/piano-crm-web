@@ -13,13 +13,16 @@ export function installAxiosAuth() {
   });
 
   // 401 handling: try refresh once, then retry the original request.
+  // Avoid loops: do not attempt refresh for the refresh/login endpoints.
   let refreshing: Promise<void> | null = null;
   api.interceptors.response.use(
     (res) => res,
     async (error) => {
       const status = error?.response?.status;
       const original: any = error?.config || {};
-      if (status === 401 && !original._retry) {
+      const url: string = String(original?.url || "");
+      const skip = original._skipAuthRefresh || url.includes("/auth/refresh") || url.includes("/auth/login");
+      if (status === 401 && !original._retry && !skip) {
         try {
           original._retry = true;
           if (!refreshing) refreshing = revalidateAuth();

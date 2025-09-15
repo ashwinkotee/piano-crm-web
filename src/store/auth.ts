@@ -36,7 +36,10 @@ export const useAuth = create<AuthState>((set) => ({
 export async function revalidateAuth() {
   try {
     // Prefer refresh cookie flow
-    const r = await api.post("/auth/refresh", {});
+    const r = await api.post("/auth/refresh", {}, { // mark to skip 401 refresh loop
+      // @ts-ignore custom flag used by axiosAuth interceptor
+      _skipAuthRefresh: true,
+    } as any);
     const accessToken = r.data.accessToken as string;
     const me = await api.get("/auth/me", { headers: { Authorization: `Bearer ${accessToken}` } });
     useAuth.getState().setAuth(accessToken, me.data);
