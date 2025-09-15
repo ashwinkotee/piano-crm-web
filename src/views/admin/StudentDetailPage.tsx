@@ -76,11 +76,11 @@ export default function StudentDetailPage() {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <AddSiblingButton baseStudent={student} onAdded={async(sid)=>{ void sid; /* reload to reflect sibling presence if needed */ setNotice('Sibling added successfully.'); setTimeout(()=>setNotice(null), 3000); }} />
           <EditStudentButton student={student} onSaved={async()=>{ const s = await getStudent(student._id); setStudent(s); setNotice('Student saved successfully.'); setTimeout(()=>setNotice(null), 3000); }} />
           <DeleteStudentButton student={student} />
-          <Link to="/admin/students" className="rounded-xl border px-3 py-2 hover:bg-slate-50">Back</Link>
+          <Link to="/admin/students" className="rounded-xl border px-3 py-1.5 text-sm hover:bg-slate-50">Back</Link>
         </div>
       </div>
 
@@ -118,7 +118,8 @@ function Field({ label, value }:{ label: string; value: string }){
 }
 
 function StudentSchedule({ studentId }:{ studentId: string }){
-  const [cursor, setCursor] = useState<Date>(new Date());
+  const today = new Date();
+  const [cursor, setCursor] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), 1));
   const startISO = format(cursor, "yyyy-MM-dd");
   const { data, loading } = useLessons({ view: "month", startISO, studentId });
 
@@ -141,8 +142,8 @@ function StudentSchedule({ studentId }:{ studentId: string }){
       <div className="mb-3 flex items-center justify-between">
         <div className="font-semibold">{format(cursor, "MMMM yyyy")} · Schedule</div>
         <div className="flex items-center gap-2">
-          <button className="rounded-xl border px-3 py-2 hover:bg-slate-50" onClick={()=>setCursor(new Date(cursor.getFullYear(), cursor.getMonth()-1, 1))}>Prev</button>
-          <button className="rounded-xl border px-3 py-2 hover:bg-slate-50" onClick={()=>setCursor(new Date(cursor.getFullYear(), cursor.getMonth()+1, 1))}>Next</button>
+          <Button size="sm" variant="secondary" onClick={()=>setCursor(new Date(cursor.getFullYear(), cursor.getMonth()-1, 1))}>Prev</Button>
+          <Button size="sm" variant="secondary" onClick={()=>setCursor(new Date(cursor.getFullYear(), cursor.getMonth()+1, 1))}>Next</Button>
         </div>
       </div>
       {loading ? (
@@ -183,7 +184,7 @@ function AddSiblingButton({ baseStudent, onAdded }:{ baseStudent: Student; onAdd
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button onClick={()=>setOpen(true)}>Add Sibling</Button>
+      <Button size="sm" onClick={()=>setOpen(true)}>Add Sibling</Button>
       {open && <AddSiblingModal baseStudent={baseStudent} onClose={()=>setOpen(false)} onSaved={(id)=>{ setOpen(false); onAdded(id); }} />}
     </>
   );
@@ -193,7 +194,7 @@ function DeleteStudentButton({ student }:{ student: Student }){
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button variant="danger" onClick={()=>setOpen(true)}>Delete Student</Button>
+      <Button size="sm" variant="danger" onClick={()=>setOpen(true)}>Delete Student</Button>
       {open && (
         <ConfirmDeleteModal
           student={student}
@@ -323,7 +324,7 @@ function EditStudentButton({ student, onSaved }:{ student: Student; onSaved: ()=
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button variant="secondary" onClick={()=>setOpen(true)}>Edit</Button>
+      <Button size="sm" variant="secondary" onClick={()=>setOpen(true)}>Edit</Button>
       {open && <EditStudentModal student={student} onClose={()=>setOpen(false)} onSaved={async()=>{ setOpen(false); await onSaved(); }} />}
     </>
   );

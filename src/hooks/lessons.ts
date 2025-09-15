@@ -16,20 +16,27 @@ export type Lesson = {
 export function useLessons(params: { view: "week"|"month"; startISO: string; studentId?: string }) {
   const [data, setData] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  async function refresh() {
+    setLoading(true);
+    setError(null);
+    try {
+      const r = await api.get("/lessons", { params: { view: params.view, start: params.startISO, studentId: params.studentId } });
+      setData(r.data);
+    } catch (e: any) {
+      setError(e?.response?.data?.error || "Failed to load lessons");
+    } finally {
+      setLoading(false);
+    }
+  }
   useEffect(() => {
     let mounted = true;
-    (async () => {
-      setLoading(true);
-      const r = await api.get("/lessons", { params: { view: params.view, start: params.startISO, studentId: params.studentId } });
-      if (mounted) setData(r.data);
-      setLoading(false);
-    })();
-    return () => { mounted = false; };
+    (async () => { if (mounted) await refresh(); })();
+    function onWake(){ refresh(); }
+    window.addEventListener('pianocrm:refresh', onWake);
+    return () => { mounted = false; window.removeEventListener('pianocrm:refresh', onWake); };
   }, [params.view, params.startISO, params.studentId]);
-  return { data, loading, refresh: async () => {
-    const r = await api.get("/lessons", { params: { view: params.view, start: params.startISO, studentId: params.studentId } });
-    setData(r.data);
-  }};
+  return { data, loading, error, refresh };
 }
 
 export async function generateMonth(payload: { year: number; month: number; durationMinutes?: number; includeFifth?: boolean }) {

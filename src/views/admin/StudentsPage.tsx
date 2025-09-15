@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Modal from "../../components/ui/Modal";
+import Button from "../../components/ui/Button";
 import type { Student } from "../../hooks/students";
 import { useStudents, createStudent } from "../../hooks/students";
 import { useGroups } from "../../hooks/groups";
@@ -30,9 +31,7 @@ export default function StudentsPage() {
             placeholder="Search by name."
             className="w-full rounded-xl border px-3 py-2 sm:w-60"
           />
-          <button onClick={() => setAdding(true)} className="rounded-xl bg-indigo-600 text-white px-3 py-2">
-            Add Student
-          </button>
+          <Button onClick={() => setAdding(true)}>Add Student</Button>
         </div>
       </div>
 

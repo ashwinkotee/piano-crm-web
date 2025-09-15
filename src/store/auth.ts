@@ -24,11 +24,13 @@ export const useAuth = create<AuthState>((set) => ({
     // Stop persisting tokens to storage; keep in memory only
     try { localStorage.setItem("user", JSON.stringify(user)); } catch {}
     set({ token, user });
+    try { scheduleRefreshFor(token); } catch {}
   },
   logout: async () => {
     try { await api.post("/auth/logout", {}); } catch {}
     try { localStorage.removeItem("token"); localStorage.removeItem("user"); } catch {}
     set({ token: null, user: null });
+    try { clearScheduledRefresh(); } catch {}
   },
 }));
 
@@ -45,6 +47,7 @@ export async function revalidateAuth() {
     useAuth.getState().setAuth(accessToken, me.data);
     // Clean legacy storage
     try { localStorage.removeItem("token"); } catch {}
+    try { scheduleRefreshFor(accessToken); } catch {}
     return;
   } catch {}
 
@@ -57,7 +60,38 @@ export async function revalidateAuth() {
   try {
     const res = await api.get("/auth/me", { headers: { Authorization: `Bearer ${token}` } });
     useAuth.getState().setAuth(token, res.data);
+    try { scheduleRefreshFor(token); } catch {}
   } catch {
     await useAuth.getState().logout();
+  }
+}
+
+// --- Sliding-session auto refresh ---
+let refreshTimer: number | null = null;
+function clearScheduledRefresh() {
+  if (refreshTimer !== null) {
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
+  }
+}
+function scheduleRefreshFor(token: string) {
+  clearScheduledRefresh();
+  try {
+    const [, payloadB64] = token.split(".");
+    const payload = JSON.parse(atob(payloadB64));
+    const expMs = (payload?.exp || 0) * 1000;
+    const now = Date.now();
+    // Refresh 60s before expiry; if already near expiry, refresh soon.
+    let delay = expMs - now - 60_000;
+    if (!isFinite(delay)) delay = 10 * 60_000; // fallback 10m
+    if (delay < 5_000) delay = 5_000;
+    refreshTimer = window.setTimeout(async () => {
+      try { await revalidateAuth(); } catch {}
+    }, delay);
+  } catch {
+    // Fallback: attempt refresh every 10m
+    refreshTimer = window.setTimeout(async () => {
+      try { await revalidateAuth(); } catch {}
+    }, 10 * 60_000);
   }
 }

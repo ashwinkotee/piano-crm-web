@@ -25,6 +25,7 @@ export function useStudents(params?: {
 }) {
   const [data, setData] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const query = useMemo(() => {
     const q: any = {};
     if (params?.program) q.program = params.program;
@@ -34,21 +35,28 @@ export function useStudents(params?: {
     return q;
   }, [params]);
 
+  async function refresh() {
+    setLoading(true);
+    setError(null);
+    try {
+      const r = await api.get("/students", { params: query });
+      setData(r.data);
+    } catch (e: any) {
+      setError(e?.response?.data?.error || "Failed to load students");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     let mounted = true;
-    (async () => {
-      setLoading(true);
-      const r = await api.get("/students", { params: query });
-      if (mounted) setData(r.data);
-      setLoading(false);
-    })();
-    return () => { mounted = false; };
+    (async () => { if (mounted) await refresh(); })();
+    function onWake(){ refresh(); }
+    window.addEventListener('pianocrm:refresh', onWake);
+    return () => { mounted = false; window.removeEventListener('pianocrm:refresh', onWake); };
   }, [JSON.stringify(query)]);
 
-  return { data, loading, refresh: async () => {
-    const r = await api.get("/students", { params: query });
-    setData(r.data);
-  }};
+  return { data, loading, error, refresh };
 }
 
 export async function createStudent(payload: {

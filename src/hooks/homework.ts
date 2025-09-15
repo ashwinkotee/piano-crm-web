@@ -28,7 +28,12 @@ export function useStudentHomework(studentId: string) {
     }
   }
 
-  useEffect(() => { if (studentId) { refresh(); } }, [studentId]);
+  useEffect(() => {
+    if (studentId) { refresh(); }
+    function onWake(){ if (studentId) refresh(); }
+    window.addEventListener('pianocrm:refresh', onWake);
+    return () => { window.removeEventListener('pianocrm:refresh', onWake); };
+  }, [studentId]);
   return { items, loading, error, refresh, setItems };
 }
 
@@ -63,7 +68,11 @@ export function useMyHomework() {
       setLoading(false);
     }
   }
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    refresh();
+    function onWake(){ refresh(); }
+    window.addEventListener('pianocrm:refresh', onWake);
+    return () => { window.removeEventListener('pianocrm:refresh', onWake); };
+  }, []);
   return { items, loading, error, refresh, setItems };
 }
-

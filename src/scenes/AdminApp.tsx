@@ -6,6 +6,7 @@ import StudentDetailPage from "../views/admin/StudentDetailPage";
 import SchedulePage from "../views/admin/SchedulePage";
 import RequestsPage from "../views/admin/RequestsPage";
 import GroupsPage from "../views/admin/GroupsPage";
+import Button from "../components/ui/Button";
 
 export default function AdminApp() {
   const nav = useNavigate();
@@ -30,15 +31,14 @@ export default function AdminApp() {
             <Tab to="/admin/schedule" label="Schedule" />
             <Tab to="/admin/requests" label="Requests" />
             <Tab to="/admin/groups" label="Groups" />
-            <button
+            <Button size="sm" variant="secondary"
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 hover:bg-white/20"
               title={theme === 'dark' ? 'Switch to light' : 'Switch to dark'}
               aria-label="Toggle theme"
             >
               {theme === 'dark' ? 'Light' : 'Dark'}
-            </button>
-            <button onClick={doLogout} className="rounded-lg border px-3 py-1.5 hover:bg-white/10">Logout</button>
+            </Button>
+            <Button size="sm" variant="secondary" onClick={doLogout}>Logout</Button>
           </nav>
         </div>
       </header>

@@ -19,24 +19,27 @@ export type GroupMeta = {
 export function useGroups() {
   const [data, setData] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoading(true);
-      const r = await api.get("/groups");
-      if (mounted) setData(r.data);
-      setLoading(false);
-    })();
-    return () => { mounted = false; };
-  }, []);
-  return {
-    data,
-    loading,
-    refresh: async () => {
+  const [error, setError] = useState<string | null>(null);
+  async function refresh() {
+    setLoading(true);
+    setError(null);
+    try {
       const r = await api.get("/groups");
       setData(r.data);
-    },
-  };
+    } catch (e: any) {
+      setError(e?.response?.data?.error || "Failed to load groups");
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => {
+    let mounted = true;
+    (async () => { if (mounted) await refresh(); })();
+    function onWake(){ refresh(); }
+    window.addEventListener('pianocrm:refresh', onWake);
+    return () => { mounted = false; window.removeEventListener('pianocrm:refresh', onWake); };
+  }, []);
+  return { data, loading, error, refresh };
 }
 
 export async function createGroup(payload: { name: string; description?: string; memberIds: string[] }) {
