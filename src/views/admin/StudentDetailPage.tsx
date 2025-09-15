@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getStudent, type Student, updateStudent, createSibling } from "../../hooks/students";
+import { getStudent, type Student, updateStudent, createSibling, deleteStudent } from "../../hooks/students";
 import { useGroups, addGroupMembers } from "../../hooks/groups";
 import { useStudentHomework, addHomework, updateHomework, deleteHomework, type Homework } from "../../hooks/homework";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
+import { useLessons, type Lesson } from "../../hooks/lessons";
+import { format, parse } from "date-fns";
 
 type StudentWithPortal = Student & { portalUser?: { email?: string } };
 
@@ -60,11 +62,6 @@ export default function StudentDetailPage() {
         <div>
           <div className="flex items-center gap-3">
             <div className="text-xl font-semibold">{student.name}</div>
-            {student.termsAccepted ? (
-              <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">Accepted</span>
-            ) : (
-              <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">Not accepted</span>
-            )}
           </div>
           <div className="text-sm text-slate-500">Student details</div>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
@@ -82,6 +79,7 @@ export default function StudentDetailPage() {
         <div className="flex items-center gap-2">
           <AddSiblingButton baseStudent={student} onAdded={async(sid)=>{ void sid; /* reload to reflect sibling presence if needed */ setNotice('Sibling added successfully.'); setTimeout(()=>setNotice(null), 3000); }} />
           <EditStudentButton student={student} onSaved={async()=>{ const s = await getStudent(student._id); setStudent(s); setNotice('Student saved successfully.'); setTimeout(()=>setNotice(null), 3000); }} />
+          <DeleteStudentButton student={student} />
           <Link to="/admin/students" className="rounded-xl border px-3 py-2 hover:bg-slate-50">Back</Link>
         </div>
       </div>
@@ -94,6 +92,7 @@ export default function StudentDetailPage() {
           <Field label="Monthly Fee" value={`$${student.monthlyFee ?? 0}`} />
           <Field label="Status" value={student.active ? 'Active' : 'Inactive'} />
           <Field label="Default Weekly Slot" value={displaySlot} />
+          <Field label="Terms and Conditions" value={student.termsAccepted ? 'Accepted' : 'Not accepted'} />
           <Field label="Email" value={student.portalUser?.email || "-"} />
           <Field label="Date of Birth" value={student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString() : "-"} />
           <Field label="Address" value={student.address || "-"} />
@@ -101,6 +100,8 @@ export default function StudentDetailPage() {
           <Field label="Phone Number" value={student.parentPhone || "-"} />
         </dl>
       </div>
+
+      <StudentSchedule studentId={student._id} />
 
       <StudentHomework studentId={student._id} />
     </div>
@@ -116,6 +117,68 @@ function Field({ label, value }:{ label: string; value: string }){
   );
 }
 
+function StudentSchedule({ studentId }:{ studentId: string }){
+  const [cursor, setCursor] = useState<Date>(new Date());
+  const startISO = format(cursor, "yyyy-MM-dd");
+  const { data, loading } = useLessons({ view: "month", startISO, studentId });
+
+  const grouped = useMemo(() => {
+    return data.reduce((acc: Record<string, Lesson[]>, l) => {
+      const key = format(new Date(l.start), "yyyy-MM-dd");
+      (acc[key] ||= []).push(l);
+      return acc;
+    }, {});
+  }, [data]);
+
+  const todayKey = format(new Date(), "yyyy-MM-dd");
+  useEffect(() => {
+    const el = document.getElementById(`stu-day-${todayKey}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [todayKey]);
+
+  return (
+    <div className="rounded-2xl border bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="font-semibold">{format(cursor, "MMMM yyyy")} · Schedule</div>
+        <div className="flex items-center gap-2">
+          <button className="rounded-xl border px-3 py-2 hover:bg-slate-50" onClick={()=>setCursor(new Date(cursor.getFullYear(), cursor.getMonth()-1, 1))}>Prev</button>
+          <button className="rounded-xl border px-3 py-2 hover:bg-slate-50" onClick={()=>setCursor(new Date(cursor.getFullYear(), cursor.getMonth()+1, 1))}>Next</button>
+        </div>
+      </div>
+      {loading ? (
+        <div className="text-slate-500">Loading.</div>
+      ) : Object.keys(grouped).length === 0 ? (
+        <div className="text-slate-500">No lessons this month.</div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {Object.entries(grouped).map(([date, lessons]) => (
+            <div key={date} id={`stu-day-${date}`} className={date === todayKey ? "ring-2 ring-indigo-400 rounded-2xl" : ""}>
+              <div className="mb-2 flex items-center justify-between">
+                <div className="font-semibold">{format(parse(date, "yyyy-MM-dd", new Date()), "EEEE, MMM d")}</div>
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{lessons.length} items</span>
+              </div>
+              <ul className="divide-y divide-slate-200 rounded-xl border">
+                {lessons.map(les => (
+                  <li key={les._id} className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-4">
+                      <div className="w-24 text-sm text-slate-500 sm:w-32 flex-none">{format(new Date(les.start), "p")} - {format(new Date(les.end), "p")}</div>
+                      <div className="min-w-0 text-sm">
+                        <div className="font-medium">{les.type === "one" ? "One-on-one" : les.type === "group" ? "Group" : "Demo"}</div>
+                        {les.notes && <div className="text-slate-500">{les.notes}</div>}
+                      </div>
+                    </div>
+                    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${les.status === 'Scheduled' ? 'bg-emerald-100 text-emerald-700' : les.status === 'Cancelled' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-700'}`}>{les.status}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AddSiblingButton({ baseStudent, onAdded }:{ baseStudent: Student; onAdded: (newId: string)=>void }){
   const [open, setOpen] = useState(false);
   return (
@@ -123,6 +186,48 @@ function AddSiblingButton({ baseStudent, onAdded }:{ baseStudent: Student; onAdd
       <Button onClick={()=>setOpen(true)}>Add Sibling</Button>
       {open && <AddSiblingModal baseStudent={baseStudent} onClose={()=>setOpen(false)} onSaved={(id)=>{ setOpen(false); onAdded(id); }} />}
     </>
+  );
+}
+
+function DeleteStudentButton({ student }:{ student: Student }){
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant="danger" onClick={()=>setOpen(true)}>Delete Student</Button>
+      {open && (
+        <ConfirmDeleteModal
+          student={student}
+          onClose={()=>setOpen(false)}
+        />
+      )}
+    </>
+  );
+}
+
+function ConfirmDeleteModal({ student, onClose }:{ student: Student; onClose: ()=>void }){
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string|null>(null);
+  return (
+    <Modal title={`Delete Student`} onClose={onClose}>
+      <div className="space-y-3">
+        <div>Are you sure you want to delete the student "{student.name}"?</div>
+        {err && <div className="text-sm text-rose-600">{err}</div>}
+        <div className="flex items-center justify-end gap-2 pt-2">
+          <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
+          <Button variant="danger" disabled={busy} onClick={async()=>{
+            setErr(null); setBusy(true);
+            try {
+              await deleteStudent(student._id);
+              // After delete, go back to list
+              window.location.href = "/admin/students";
+            } catch (e:any) {
+              setErr(e?.response?.data?.error || "Could not delete");
+              setBusy(false);
+            }
+          }}>{busy ? 'Deleting.' : 'Delete'}</Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 

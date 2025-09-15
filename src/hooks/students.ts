@@ -114,3 +114,8 @@ export async function createSibling(baseStudentId: string, payload: {
   const r = await api.post(`/students/${baseStudentId}/siblings`, payload);
   return r.data as Student;
 }
+
+export async function deleteStudent(id: string) {
+  const r = await api.delete(`/students/${id}`);
+  return r.data as { ok: boolean };
+}

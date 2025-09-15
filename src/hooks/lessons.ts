@@ -3,9 +3,10 @@ import { api } from "../lib/api";
 
 export type Lesson = {
   _id: string;
-  type: "one" | "group";
-  studentId: string;
+  type: "one" | "group" | "demo";
+  studentId?: string; // optional for demo
   groupId?: string;
+  demoName?: string;  // for demo lessons
   start: string; // ISO
   end: string;   // ISO
   status: "Scheduled" | "Cancelled" | "Completed";
@@ -46,13 +47,22 @@ export async function deleteLesson(id: string) {
   return r.data as { ok: boolean };
 }
 
-export async function createLesson(payload: {
-  studentId: string;
-  type: "one" | "group";
-  start: string; // ISO
-  end: string;   // ISO
-  notes?: string;
-}) {
+export async function createLesson(payload: (
+  {
+    studentId: string;
+    type: "one" | "group";
+    start: string; // ISO
+    end: string;   // ISO
+    notes?: string;
+  } |
+  {
+    type: "demo";
+    demoName: string;
+    start: string; // ISO
+    end: string;   // ISO
+    notes?: string;
+  }
+)) {
   const r = await api.post("/lessons", payload);
   return r.data as Lesson;
 }

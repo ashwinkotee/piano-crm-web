@@ -29,6 +29,12 @@ export default function SchedulePage() {
   const [adding, setAdding] = useState<{ date?: Date } | null>(null);
   const grouped = useMemo(() => groupByDate(data), [data]);
 
+  const todayKey = format(new Date(), "yyyy-MM-dd");
+  React.useEffect(() => {
+    const el = document.getElementById(`day-${todayKey}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [todayKey]);
+
   return (
     <div className="space-y-6">
       <Toolbar
@@ -105,8 +111,8 @@ function Toolbar({
 }
 
 /* ---------- List view ---------- */
-function Card({ children }:{ children: React.ReactNode }) {
-  return <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card text-slate-900">{children}</div>;
+function Card({ children, className="" }:{ children: React.ReactNode; className?: string }) {
+  return <div className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-card text-slate-900 ${className}`}>{children}</div>;
 }
 function ListView({ loading, grouped, onEdit, studentById, groupById }:{
   loading: boolean; grouped: Record<string, Lesson[]>; onEdit: (l:Lesson)=>void; studentById: Record<string, { _id: string; name: string }>; groupById: Record<string, { _id: string; name: string }>;
@@ -114,32 +120,41 @@ function ListView({ loading, grouped, onEdit, studentById, groupById }:{
   if (loading) return <Card><div className="text-slate-500">Loading lessons…</div></Card>;
   if (Object.keys(grouped).length === 0) return <Card><div className="text-slate-500">No lessons scheduled.</div></Card>;
 
+  const todayKey = format(new Date(), "yyyy-MM-dd");
+  React.useEffect(() => {
+    const el = document.getElementById(`day-${todayKey}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [todayKey]);
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       {Object.entries(grouped).map(([date, lessons]) => {
         const display = dedupeGroupLessons(lessons);
         return (
-        <Card key={date}>
+        <div key={date} id={`day-${date}`} className={date === todayKey ? "ring-2 ring-indigo-400 rounded-2xl" : ""}>
+        <Card>
           <div className="mb-3 flex items-center justify-between">
             <div className="font-semibold">{format(parse(date, "yyyy-MM-dd", new Date()), "EEEE, MMM d")}</div>
             <Badge tone="muted">{display.length} items</Badge>
           </div>
           <ul className="divide-y divide-slate-200">
             {display.map(les => (
-              <li key={les._id} className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-4">
-                  <div className="text-sm text-slate-500 w-32">{format(new Date(les.start), "p")} - {format(new Date(les.end), "p")}</div>
-                  <div className="text-sm">
-                    <div className="font-medium">{les.type === "one" ? "One-on-one" : "Group"}</div>
-                    <div className="text-slate-600">
+              <li key={les._id} className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-4">
+                  <div className="w-24 text-sm text-slate-500 sm:w-32 flex-none">{format(new Date(les.start), "p")} - {format(new Date(les.end), "p")}</div>
+                  <div className="min-w-0 text-sm">
+                    <div className="font-medium">{les.type === "one" ? "One-on-one" : les.type === "group" ? "Group" : "Demo"}</div>
+                    <div className="truncate text-slate-600">
                       {les.type === "group" && (les as any).groupId
                         ? (groupById[(les as any).groupId]?.name || "Group")
+                        : les.type === "demo"
+                        ? ((les as any).demoName || "Demo student")
                         : (studentById[les.studentId]?.name || "Unknown student")}
                     </div>
                     {les.notes && <div className="text-slate-500">{les.notes}</div>}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 sm:self-auto self-end">
                   <Badge tone={
                     les.status === "Scheduled" ? "ok" :
                     les.status === "Cancelled" ? "danger" : "muted"
@@ -152,6 +167,7 @@ function ListView({ loading, grouped, onEdit, studentById, groupById }:{
             ))}
           </ul>
         </Card>
+        </div>
       );})}
     </div>
   );
@@ -182,10 +198,12 @@ function EventPill({ l, onClick, studentName, color }:{ l: Lesson; onClick: ()=>
     <button
       onClick={onClick}
       className={`w-full truncate rounded-lg border px-2 py-1 text-left text-xs hover:shadow-sm ${base}`}
-      title={`${format(new Date(l.start), "p")} ${(l.type === "one" ? "1:1" : "Group")} ${studentName ? "- "+studentName : ""}`}
+      title={`${format(new Date(l.start), "p")} ${(
+        l.type === "one" ? "1:1" : l.type === "group" ? "Group" : "Demo"
+      )} ${studentName ? "- "+studentName : ""}`}
     >
       <span className="font-semibold">{format(new Date(l.start), "p")}</span>
-      <span className="opacity-80"> · {l.type === "one" ? "1:1" : "Group"}</span>
+      <span className="opacity-80"> · {l.type === "one" ? "1:1" : l.type === "group" ? "Group" : "Demo"}</span>
       {studentName && <span className="opacity-90"> · {studentName}</span>}
     </button>
   );
@@ -253,8 +271,13 @@ function CalendarMonth({
                   {items.length === 0 && <div className="text-xs text-slate-300">-</div>}
                   {items.map(l => {
                     const isGroup = l.type === "group" && (l as any).groupId;
-                    const label = isGroup ? (groupById[(l as any).groupId!]?.name || "Group") : (studentById[l.studentId]?.name);
-                    const key = isGroup ? `g:${(l as any).groupId}` : `s:${l.studentId}`;
+                    const isDemo = l.type === "demo";
+                    const label = isGroup
+                      ? (groupById[(l as any).groupId!]?.name || "Group")
+                      : isDemo
+                      ? ((l as any).demoName || "Demo student")
+                      : (studentById[l.studentId || ""]?.name);
+                    const key = isGroup ? `g:${(l as any).groupId}` : (isDemo ? `demo:${(l as any).demoName || ''}` : `s:${l.studentId}`);
                     const color = colorForKey(key);
                     return (
                       <EventPill key={l._id} l={l} onClick={()=>onEdit(l)} studentName={label} color={color} />
@@ -551,8 +574,9 @@ function AddLessonDialog({ defaultDate, onClose, onSaved }:{
 }) {
   const { data: students } = useStudents({ q: "" });
   const { data: groups } = useGroups();
-  const [target, setTarget] = useState<string>("one"); // 'one' or groupId
+  const [target, setTarget] = useState<string>("one"); // 'one' | 'demo' | groupId
   const [studentId, setStudentId] = useState<string>("");
+  const [demoName, setDemoName] = useState<string>("");
   const base = defaultDate ?? new Date();
   const [slots, setSlots] = useState<{ date: string; time: string }[]>([
     { date: format(base, "yyyy-MM-dd"), time: format(base, "HH:mm") },
@@ -575,6 +599,15 @@ function AddLessonDialog({ defaultDate, onClose, onSaved }:{
           const endISO = fromLocalInput(toLocalInput(localEnd));
           await createLesson({ studentId, type: "one", start: startISO, end: endISO, notes: notes || undefined });
         }
+      } else if (target === "demo") {
+        if (!demoName.trim()) throw new Error("Enter demo student name");
+        for (const s of slots) {
+          const startISO = fromLocalInput(`${s.date}T${s.time}`);
+          const localStart = new Date(`${s.date}T${s.time}`);
+          const localEnd = new Date(localStart.getTime() + duration * 60000);
+          const endISO = fromLocalInput(toLocalInput(localEnd));
+          await createLesson({ type: "demo", demoName: demoName.trim(), start: startISO, end: endISO, notes: notes || undefined });
+        }
       } else {
         const dates = slots.map(s => fromLocalInput(`${s.date}T${s.time}`));
         await scheduleGroupSessions(target, { dates, durationMinutes: duration, notes: notes || undefined });
@@ -594,6 +627,7 @@ function AddLessonDialog({ defaultDate, onClose, onSaved }:{
             <div className="text-slate-600">Type</div>
             <select className="w-full rounded-xl border px-3 py-2" value={target} onChange={e=>setTarget(e.target.value)}>
               <option value="one">One-on-one</option>
+              <option value="demo">Demo</option>
               {groups.map(g => (
                 <option key={g._id} value={g._id}>Group: {g.name}</option>
               ))}
@@ -608,6 +642,11 @@ function AddLessonDialog({ defaultDate, onClose, onSaved }:{
                   <option key={s._id} value={s._id}>{s.name}{s.ageGroup ? ` - ${s.ageGroup}` : ""}</option>
                 ))}
               </select>
+            </label>
+          ) : target === "demo" ? (
+            <label className="text-sm">
+              <div className="text-slate-600">Demo student name</div>
+              <input className="w-full rounded-xl border px-3 py-2" placeholder="Enter name" value={demoName} onChange={e=>setDemoName(e.target.value)} />
             </label>
           ) : (
             <div className="text-sm flex items-end text-slate-600">Scheduling for selected group</div>
