@@ -15,6 +15,12 @@ const PortalApp = React.lazy(() => import("./scenes/PortalApp"));
 installAxiosAuth();
 async function bootstrap() {
   await revalidateAuth();
+  // Revalidate when the tab becomes visible again (e.g., after locking phone)
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState === "visible") {
+      try { await revalidateAuth(); } catch {}
+    }
+  });
   ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
     <BrowserRouter>

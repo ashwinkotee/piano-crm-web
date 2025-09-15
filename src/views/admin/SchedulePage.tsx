@@ -149,7 +149,7 @@ function ListView({ loading, grouped, onEdit, studentById, groupById }:{
                         ? (groupById[(les as any).groupId]?.name || "Group")
                         : les.type === "demo"
                         ? ((les as any).demoName || "Demo student")
-                        : (studentById[les.studentId]?.name || "Unknown student")}
+                        : (studentById[les.studentId as string]?.name || "Unknown student")}
                     </div>
                     {les.notes && <div className="text-slate-500">{les.notes}</div>}
                   </div>
