@@ -4,7 +4,6 @@ import { useAuth } from "../store/auth";
 import StudentsPage from "../views/admin/StudentsPage";
 import StudentDetailPage from "../views/admin/StudentDetailPage";
 import SchedulePage from "../views/admin/SchedulePage";
-import RequestsPage from "../views/admin/RequestsPage";
 import GroupsPage from "../views/admin/GroupsPage";
 import Button from "../components/ui/Button";
 
@@ -29,7 +28,6 @@ export default function AdminApp() {
           <nav className="flex flex-wrap items-center justify-center gap-2 text-sm sm:justify-end">
             <Tab to="/admin/students" label="Students" />
             <Tab to="/admin/schedule" label="Schedule" />
-            <Tab to="/admin/requests" label="Requests" />
             <Tab to="/admin/groups" label="Groups" />
             <Button size="sm" variant="secondary"
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -47,7 +45,6 @@ export default function AdminApp() {
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/:id" element={<StudentDetailPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
-          <Route path="/requests" element={<RequestsPage />} />
           <Route path="/groups" element={<GroupsPage />} />
           <Route path="*" element={<div className="text-slate-300">Pick a tab.</div>} />
         </Routes>
@@ -68,3 +65,5 @@ function Tab({ to, label }: { to: string; label: string }) {
     </NavLink>
   );
 }
+
+

@@ -15,11 +15,11 @@ type AuthState = {
 const legacyUser = (() => {
   try { return JSON.parse(localStorage.getItem("user") || "null"); } catch { return null; }
 })();
-const legacyToken = localStorage.getItem("token");
+const initialLegacyToken = localStorage.getItem("token");
 
 export const useAuth = create<AuthState>((set) => ({
   user: legacyUser,
-  token: legacyToken,
+  token: initialLegacyToken,
   setAuth: (token, user) => {
     // Stop persisting tokens to storage; keep in memory only
     try { localStorage.setItem("user", JSON.stringify(user)); } catch {}
@@ -36,33 +36,50 @@ export const useAuth = create<AuthState>((set) => ({
 
 // Rehydrate using refresh cookie when available; fall back to legacy token
 export async function revalidateAuth() {
+  const state = useAuth.getState();
+  let refreshError: any = null;
   try {
-    // Prefer refresh cookie flow
-    const r = await api.post("/auth/refresh", {}, { // mark to skip 401 refresh loop
+    const r = await api.post("/auth/refresh", {}, {
       // @ts-ignore custom flag used by axiosAuth interceptor
       _skipAuthRefresh: true,
     } as any);
     const accessToken = r.data.accessToken as string;
     const me = await api.get("/auth/me", { headers: { Authorization: `Bearer ${accessToken}` } });
-    useAuth.getState().setAuth(accessToken, me.data);
-    // Clean legacy storage
+    state.setAuth(accessToken, me.data);
     try { localStorage.removeItem("token"); } catch {}
-    try { scheduleRefreshFor(accessToken); } catch {}
     return;
-  } catch {}
+  } catch (err: any) {
+    refreshError = err;
+  }
 
-  // Fallback: legacy token if present
-  const token = legacyToken;
-  if (!token) {
-    await useAuth.getState().logout();
+  const status = refreshError?.response?.status as number | undefined;
+  if (!status) {
+    // Likely a network hiccup or the tab was offline; keep existing session state.
     return;
   }
+  if (status >= 500) {
+    return;
+  }
+  if (status !== 401 && status !== 403) {
+    return;
+  }
+
+  const legacyToken = (() => {
+    try { return localStorage.getItem("token"); } catch { return null; }
+  })();
+  if (!legacyToken) {
+    await state.logout();
+    return;
+  }
+
   try {
-    const res = await api.get("/auth/me", { headers: { Authorization: `Bearer ${token}` } });
-    useAuth.getState().setAuth(token, res.data);
-    try { scheduleRefreshFor(token); } catch {}
-  } catch {
-    await useAuth.getState().logout();
+    const res = await api.get("/auth/me", { headers: { Authorization: `Bearer ${legacyToken}` } });
+    state.setAuth(legacyToken, res.data);
+  } catch (err: any) {
+    const fallbackStatus = err?.response?.status as number | undefined;
+    if (fallbackStatus === 401 || fallbackStatus === 403) {
+      await state.logout();
+    }
   }
 }
 
@@ -95,3 +112,12 @@ function scheduleRefreshFor(token: string) {
     }, 10 * 60_000);
   }
 }
+
+
+
+
+
+
+
+
+

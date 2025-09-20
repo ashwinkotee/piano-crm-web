@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import OAuthCallback from "./pages/OAuthCallback";
+import ForgotPassword from "./pages/ForgotPassword";
 import { Protected } from "./components/Protected";
 import { installAxiosAuth } from "./lib/axiosAuth";
 import "./index.css";
@@ -30,6 +31,7 @@ async function bootstrap() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
         <Route
           path="/portal/change-password"
@@ -66,3 +68,5 @@ async function bootstrap() {
   );
 }
 bootstrap();
+
+

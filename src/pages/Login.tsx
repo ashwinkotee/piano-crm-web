@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { api, API_BASE_URL } from "../lib/api";
 import { useAuth } from "../store/auth";
 
 export default function Login() {
@@ -12,36 +13,41 @@ export default function Login() {
   const progressTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    return () => { if (progressTimer.current !== null) clearInterval(progressTimer.current); };
+    return () => {
+      if (progressTimer.current !== null) clearInterval(progressTimer.current);
+    };
   }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setErr(null); setLoading(true);
+    setErr(null);
+    setLoading(true);
     if (progressTimer.current !== null) clearInterval(progressTimer.current);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
-        method: "POST",
+      const res = await api.post("/auth/login", { email, password }, {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        credentials: "include",
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Login failed");
+      const data = res.data;
+      if (!data?.user || !(data.accessToken || data.token)) {
+        throw new Error(data?.error || "Login failed");
+      }
       setAuth(data.accessToken || data.token, data.user);
       if (data.user.role === "portal" && data.user.mustChangePassword) nav("/portal/change-password");
       else nav(data.user.role === "admin" ? "/admin" : "/portal/home", { replace: true });
-    } catch (e:any) {
-      setErr(e.message || "Login failed");
+    } catch (e: any) {
+      const message = e?.response?.data?.error || e?.message || "Login failed";
+      setErr(message === "Network Error" && !API_BASE_URL ? "API server unreachable. Check VITE_API_URL." : message);
     } finally {
-      if (progressTimer.current !== null) { clearInterval(progressTimer.current); progressTimer.current = null; }
+      if (progressTimer.current !== null) {
+        clearInterval(progressTimer.current);
+        progressTimer.current = null;
+      }
       setTimeout(() => { setLoading(false); }, 300);
     }
   }
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#0f1125] via-[#14143a] to-[#0b0d1d]">
-      {/* Decorative music notes */}
       <div aria-hidden className="pointer-events-none absolute inset-0 select-none">
         {new Array(18).fill(null).map((_, i) => (
           <span
@@ -49,7 +55,7 @@ export default function Login() {
             className="absolute text-2xl md:text-3xl opacity-20 text-amber-200"
             style={{ top: `${(i * 53) % 100}%`, left: `${(i * 37) % 100}%`, transform: `translate(-50%, -50%) rotate(${(i * 23) % 360}deg)` }}
           >
-            ♪
+            ~
           </span>
         ))}
       </div>
@@ -59,8 +65,22 @@ export default function Login() {
           <div className="text-sm opacity-80">Welcome to</div>
           <div className="text-2xl font-semibold leading-tight">Learn Music with Ashwin</div>
         </div>
-        <input type="email" autoComplete="username" className="w-full rounded-2xl border border-white/15 bg-white/10 px-4 py-2.5 placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
-        <input type="password" autoComplete="current-password" className="w-full rounded-2xl border border-white/15 bg-white/10 px-4 py-2.5 placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} />
+        <input
+          type="email"
+          autoComplete="username"
+          className="w-full rounded-2xl border border-white/15 bg-white/10 px-4 py-2.5 placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type="password"
+          autoComplete="current-password"
+          className="w-full rounded-2xl border border-white/15 bg-white/10 px-4 py-2.5 placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
         {err && <div className="text-sm text-rose-300">{err}</div>}
         <button
           disabled={loading}
@@ -72,10 +92,12 @@ export default function Login() {
           )}
           {loading ? "Signing in." : "Sign in"}
         </button>
+        <div className="text-xs text-center text-white/70">
+          Forgot password? <Link to="/forgot-password" className="underline">Reset it here</Link>
+        </div>
       </form>
 
       <div aria-hidden className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/40 to-transparent" />
     </div>
   );
 }
-

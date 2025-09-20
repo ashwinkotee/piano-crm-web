@@ -1,9 +1,7 @@
-import type { Config } from 'jest';
-
-const config: Config = {
+/** @type {import('jest').Config} */
+module.exports = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
-  // Use ts-jest to transform TS/TSX files and support ESM
   transform: {
     '^.+\\.(ts|tsx)$': [
       'ts-jest',
@@ -13,9 +11,9 @@ const config: Config = {
           module: 'esnext',
           target: 'es2022',
           esModuleInterop: true,
-          types: ['vite/client', 'node', 'jest']
-        }
-      }
+          types: ['vite/client', 'node', 'jest'],
+        },
+      },
     ],
   },
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
@@ -25,5 +23,3 @@ const config: Config = {
     '^\.\./lib/api$': '<rootDir>/src/lib/api.jest.ts',
   },
 };
-
-export default config;
