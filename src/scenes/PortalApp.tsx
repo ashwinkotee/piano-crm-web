@@ -37,6 +37,7 @@ export default function PortalApp() {
           <nav className="flex flex-1 flex-col gap-1 text-sm">
             <SideLink to="/portal/home" label="Home" />
             <SideLink to="/portal/profile" label="Profile" />
+            <SideLink to="/portal/terms" label="Terms & Conditions" />
           </nav>
           <div className="mt-4 flex items-center justify-between gap-2 text-xs">
             <button
@@ -83,6 +84,7 @@ export default function PortalApp() {
                   <div className="flex flex-col">
                     <NavLink onClick={() => setMobileOpen(false)} to="/portal/home" className="rounded-lg px-3 py-2 hover:bg-white/10">Home</NavLink>
                     <NavLink onClick={() => setMobileOpen(false)} to="/portal/profile" className="rounded-lg px-3 py-2 hover:bg-white/10">Profile</NavLink>
+                    <NavLink onClick={() => setMobileOpen(false)} to="/portal/terms" className="rounded-lg px-3 py-2 hover:bg-white/10">Terms & Conditions</NavLink>
                     <button onClick={() => { setMobileOpen(false); doLogout(); }} className="text-left rounded-lg px-3 py-2 hover:bg-white/10">Logout</button>
                   </div>
                 </div>
@@ -132,4 +134,8 @@ function SideLink({ to, label }: { to: string; label: string }) {
     </NavLink>
   );
 }
+
+
+
+
 
