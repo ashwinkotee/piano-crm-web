@@ -551,22 +551,41 @@ function groupByDate(lessons: Lesson[]) {
 }
 
 // Collapse group lessons so we only show one entry per (groupId, start)
+const STATUS_PRIORITY: Record<Lesson["status"], number> = {
+  Scheduled: 0,
+  Cancelled: 1,
+  Completed: 2,
+};
+
 function dedupeGroupLessons(lessons: Lesson[]): Lesson[] {
-  const seen = new Map<string, Lesson>();
+  const seen = new Map<string, { lesson: Lesson; index: number }>();
   const out: Lesson[] = [];
+
   for (const l of lessons) {
     if (l.type === "group" && (l as any).groupId) {
-      const k = `${(l as any).groupId}|${new Date(l.start).toISOString()}`;
-      if (!seen.has(k)) {
-        seen.set(k, l);
+      const key = `${(l as any).groupId}|${new Date(l.start).toISOString()}`;
+      const existing = seen.get(key);
+      if (!existing) {
+        const index = out.length;
         out.push(l);
+        seen.set(key, { lesson: l, index });
+        continue;
+      }
+
+      const currentPriority = STATUS_PRIORITY[l.status] ?? 0;
+      const existingPriority = STATUS_PRIORITY[existing.lesson.status] ?? 0;
+      if (currentPriority > existingPriority) {
+        out[existing.index] = l;
+        seen.set(key, { lesson: l, index: existing.index });
       }
     } else {
       out.push(l);
     }
   }
+
   return out;
 }
+
 
 /* ---------- New Add lesson dialog (multi-date + groups) ---------- */
 function AddLessonDialog({ defaultDate, onClose, onSaved }:{
