@@ -21,8 +21,11 @@ export const useAuth = create<AuthState>((set) => ({
   user: legacyUser,
   token: initialLegacyToken,
   setAuth: (token, user) => {
-    // Stop persisting tokens to storage; keep in memory only
-    try { localStorage.setItem("user", JSON.stringify(user)); } catch {}
+    // Persist auth so suspended/backgrounded tabs can rehydrate without logging out
+    try {
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("token", token);
+    } catch {}
     set({ token, user });
     try { scheduleRefreshFor(token); } catch {}
   },
