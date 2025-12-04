@@ -14,9 +14,11 @@ export function useStudentHomework(studentId: string) {
   const [items, setItems] = useState<Homework[]>([]);
   const [loading, setLoading] = useState(true);
   const [hydrated, setHydrated] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function refresh() {
+    setFetching(true);
     if (!hydrated) setLoading(true);
     setError(null);
     try {
@@ -27,6 +29,7 @@ export function useStudentHomework(studentId: string) {
       setError(e?.response?.data?.error || "Failed to load homework");
     } finally {
       setLoading(false);
+      setFetching(false);
     }
   }
 
@@ -58,8 +61,10 @@ export function useMyHomework() {
   const [items, setItems] = useState<Homework[]>([]);
   const [loading, setLoading] = useState(true);
   const [hydrated, setHydrated] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function refresh() {
+    setFetching(true);
     if (!hydrated) setLoading(true);
     setError(null);
     try {
@@ -70,6 +75,7 @@ export function useMyHomework() {
       setError(e?.response?.data?.error || "Failed to load homework");
     } finally {
       setLoading(false);
+      setFetching(false);
     }
   }
   useEffect(() => {
@@ -78,5 +84,5 @@ export function useMyHomework() {
     window.addEventListener('pianocrm:refresh', onWake);
     return () => { window.removeEventListener('pianocrm:refresh', onWake); };
   }, []);
-  return { items, loading: loading && !hydrated, error, refresh, setItems };
+  return { items, loading: loading && !hydrated, fetching, error, refresh, setItems };
 }

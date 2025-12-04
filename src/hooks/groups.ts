@@ -20,8 +20,10 @@ export function useGroups() {
   const [data, setData] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [hydrated, setHydrated] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function refresh() {
+    setFetching(true);
     if (!hydrated) setLoading(true);
     setError(null);
     try {
@@ -32,6 +34,7 @@ export function useGroups() {
       setError(e?.response?.data?.error || "Failed to load groups");
     } finally {
       setLoading(false);
+      setFetching(false);
     }
   }
   useEffect(() => {
@@ -41,7 +44,7 @@ export function useGroups() {
     window.addEventListener('pianocrm:refresh', onWake);
     return () => { mounted = false; window.removeEventListener('pianocrm:refresh', onWake); };
   }, []);
-  return { data, loading: loading && !hydrated, error, refresh };
+  return { data, loading: loading && !hydrated, fetching, error, refresh, setData };
 }
 
 export async function createGroup(payload: { name: string; description?: string; memberIds: string[] }) {

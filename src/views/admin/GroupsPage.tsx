@@ -5,7 +5,7 @@ import { useGroups, createGroup, updateGroup, scheduleGroupSessions, deleteGroup
 import { useStudents, type Student } from "../../hooks/students";
 
 export default function GroupsPage() {
-  const { data: groups, loading, refresh } = useGroups();
+  const { data: groups, loading, fetching, refresh, setData } = useGroups();
   const { data: students } = useStudents({ q: "" });
   const studentById = useMemo(() => Object.fromEntries(students.map(s => [s._id, s])), [students]);
 
@@ -14,6 +14,15 @@ export default function GroupsPage() {
   const [scheduling, setScheduling] = useState<Group | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
+  const upsertGroup = (g: Group) => setData((prev) => {
+    const idx = prev.findIndex(x => x._id === g._id);
+    if (idx === -1) return [...prev, g];
+    const next = [...prev];
+    next[idx] = g;
+    return next;
+  });
+  const removeGroup = (id: string) => setData((prev) => prev.filter(g => g._id !== id));
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -21,7 +30,10 @@ export default function GroupsPage() {
           <div className="text-xl font-semibold">Groups</div>
           <div className="text-sm text-slate-500">Create groups and schedule sessions (e.g., Theory)</div>
         </div>
-        <Button onClick={() => setShowCreate(true)}>New Group</Button>
+        <div className="flex items-center gap-3">
+          {fetching && <span className="text-xs text-slate-500">Refreshing…</span>}
+          <Button onClick={() => setShowCreate(true)}>New Group</Button>
+        </div>
       </div>
 
       {notice && (
@@ -30,7 +42,7 @@ export default function GroupsPage() {
         </div>
       )}
       <div className="rounded-2xl border bg-white p-4 shadow-sm overflow-x-auto">
-        {loading ? (
+        {loading && groups.length === 0 ? (
           <div className="text-slate-500">Loading.</div>
         ) : groups.length === 0 ? (
           <div className="text-slate-500">No groups yet.</div>
@@ -61,7 +73,7 @@ export default function GroupsPage() {
                         onClick={async () => {
                           if (!confirm(`Delete group "${g.name}"? This will hide it from lists.`)) return;
                           await deleteGroup(g._id);
-                          await refresh();
+                          removeGroup(g._id);
                         }}
                       >
                         Delete
@@ -83,7 +95,7 @@ export default function GroupsPage() {
           onSave={async (p) => {
             const res = await createGroup(p);
             setShowCreate(false);
-            await refresh();
+            upsertGroup(res.group);
             const m = res.meta;
             setNotice(`Group created. Members: ${m.addedMembers}. Lessons added: ${m.createdLessons}.`);
             setTimeout(() => setNotice(null), 4000);
@@ -101,7 +113,7 @@ export default function GroupsPage() {
           onSave={async (p) => {
             const res = await updateGroup(editing._id, p);
             setEditing(null);
-            await refresh();
+            upsertGroup(res.group);
             const m = res.meta as GroupMeta;
             setNotice(`Group saved. Added members: ${m.addedMembers}, removed members: ${m.removedMembers}. Lessons added: ${m.createdLessons}, removed: ${m.removedLessons}.`);
             setTimeout(() => setNotice(null), 5000);

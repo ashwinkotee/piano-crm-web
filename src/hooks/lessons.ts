@@ -18,7 +18,9 @@ export function useLessons(params: { view: "week"|"month"; startISO: string; stu
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [fetching, setFetching] = useState(false);
   async function refresh() {
+    setFetching(true);
     if (!hydrated) setLoading(true);
     setError(null);
     try {
@@ -29,6 +31,7 @@ export function useLessons(params: { view: "week"|"month"; startISO: string; stu
       setError(e?.response?.data?.error || "Failed to load lessons");
     } finally {
       setLoading(false);
+      setFetching(false);
     }
   }
   useEffect(() => {
@@ -38,7 +41,7 @@ export function useLessons(params: { view: "week"|"month"; startISO: string; stu
     window.addEventListener('pianocrm:refresh', onWake);
     return () => { mounted = false; window.removeEventListener('pianocrm:refresh', onWake); };
   }, [params.view, params.startISO, params.studentId]);
-  return { data, loading: loading && !hydrated, error, refresh };
+  return { data, loading: loading && !hydrated, fetching, error, refresh, setData };
 }
 
 export async function generateMonth(payload: { year: number; month: number; durationMinutes?: number; includeFifth?: boolean }) {
