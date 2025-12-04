@@ -13,14 +13,16 @@ export type Homework = {
 export function useStudentHomework(studentId: string) {
   const [items, setItems] = useState<Homework[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function refresh() {
-    setLoading(true);
+    if (!hydrated) setLoading(true);
     setError(null);
     try {
       const r = await api.get(`/students/${studentId}/homework`);
       setItems(r.data);
+      setHydrated(true);
     } catch (e: any) {
       setError(e?.response?.data?.error || "Failed to load homework");
     } finally {
@@ -34,7 +36,7 @@ export function useStudentHomework(studentId: string) {
     window.addEventListener('pianocrm:refresh', onWake);
     return () => { window.removeEventListener('pianocrm:refresh', onWake); };
   }, [studentId]);
-  return { items, loading, error, refresh, setItems };
+  return { items, loading: loading && !hydrated, error, refresh, setItems };
 }
 
 export async function addHomework(studentId: string, text: string) {
@@ -55,13 +57,15 @@ export async function deleteHomework(id: string) {
 export function useMyHomework() {
   const [items, setItems] = useState<Homework[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function refresh() {
-    setLoading(true);
+    if (!hydrated) setLoading(true);
     setError(null);
     try {
       const r = await api.get(`/homework/mine`);
       setItems(r.data);
+      setHydrated(true);
     } catch (e: any) {
       setError(e?.response?.data?.error || "Failed to load homework");
     } finally {
@@ -74,5 +78,5 @@ export function useMyHomework() {
     window.addEventListener('pianocrm:refresh', onWake);
     return () => { window.removeEventListener('pianocrm:refresh', onWake); };
   }, []);
-  return { items, loading, error, refresh, setItems };
+  return { items, loading: loading && !hydrated, error, refresh, setItems };
 }

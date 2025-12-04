@@ -25,6 +25,7 @@ export function useStudents(params?: {
 }) {
   const [data, setData] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const query = useMemo(() => {
     const q: any = {};
@@ -36,11 +37,12 @@ export function useStudents(params?: {
   }, [params]);
 
   async function refresh() {
-    setLoading(true);
+    if (!hydrated) setLoading(true);
     setError(null);
     try {
       const r = await api.get("/students", { params: query });
       setData(r.data);
+      setHydrated(true);
     } catch (e: any) {
       setError(e?.response?.data?.error || "Failed to load students");
     } finally {
@@ -56,7 +58,7 @@ export function useStudents(params?: {
     return () => { mounted = false; window.removeEventListener('pianocrm:refresh', onWake); };
   }, [JSON.stringify(query)]);
 
-  return { data, loading, error, refresh };
+  return { data, loading: loading && !hydrated, error, refresh };
 }
 
 export async function createStudent(payload: {

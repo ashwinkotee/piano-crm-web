@@ -17,12 +17,14 @@ export function useLessons(params: { view: "week"|"month"; startISO: string; stu
   const [data, setData] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
   async function refresh() {
-    setLoading(true);
+    if (!hydrated) setLoading(true);
     setError(null);
     try {
       const r = await api.get("/lessons", { params: { view: params.view, start: params.startISO, studentId: params.studentId } });
       setData(r.data);
+      setHydrated(true);
     } catch (e: any) {
       setError(e?.response?.data?.error || "Failed to load lessons");
     } finally {
@@ -36,7 +38,7 @@ export function useLessons(params: { view: "week"|"month"; startISO: string; stu
     window.addEventListener('pianocrm:refresh', onWake);
     return () => { mounted = false; window.removeEventListener('pianocrm:refresh', onWake); };
   }, [params.view, params.startISO, params.studentId]);
-  return { data, loading, error, refresh };
+  return { data, loading: loading && !hydrated, error, refresh };
 }
 
 export async function generateMonth(payload: { year: number; month: number; durationMinutes?: number; includeFifth?: boolean }) {
