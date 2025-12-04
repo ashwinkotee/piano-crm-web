@@ -40,6 +40,7 @@ export const useAuth = create<AuthState>((set) => ({
 // Rehydrate using refresh cookie when available; fall back to legacy token
 export async function revalidateAuth() {
   const state = useAuth.getState();
+  const currentToken = state.token;
   let refreshError: any = null;
   try {
     const r = await api.post("/auth/refresh", {}, {
@@ -49,7 +50,6 @@ export async function revalidateAuth() {
     const accessToken = r.data.accessToken as string;
     const me = await api.get("/auth/me", { headers: { Authorization: `Bearer ${accessToken}` } });
     state.setAuth(accessToken, me.data);
-    try { localStorage.removeItem("token"); } catch {}
     return;
   } catch (err: any) {
     refreshError = err;
@@ -63,26 +63,19 @@ export async function revalidateAuth() {
   if (status >= 500) {
     return;
   }
-  if (status !== 401 && status !== 403) {
-    return;
-  }
+  if (status !== 401 && status !== 403) return;
 
   const legacyToken = (() => {
     try { return localStorage.getItem("token"); } catch { return null; }
   })();
-  if (!legacyToken) {
-    await state.logout();
-    return;
-  }
+  const fallbackToken = currentToken || legacyToken;
+  if (!fallbackToken) { await state.logout(); return; }
 
   try {
-    const res = await api.get("/auth/me", { headers: { Authorization: `Bearer ${legacyToken}` } });
-    state.setAuth(legacyToken, res.data);
+    const res = await api.get("/auth/me", { headers: { Authorization: `Bearer ${fallbackToken}` } });
+    state.setAuth(fallbackToken, res.data);
   } catch (err: any) {
-    const fallbackStatus = err?.response?.status as number | undefined;
-    if (fallbackStatus === 401 || fallbackStatus === 403) {
-      await state.logout();
-    }
+    await state.logout();
   }
 }
 
