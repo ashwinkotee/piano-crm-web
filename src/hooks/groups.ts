@@ -19,13 +19,15 @@ export type GroupMeta = {
 export function useGroups() {
   const [data, setData] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function refresh() {
-    setLoading(true);
+    if (!hydrated) setLoading(true);
     setError(null);
     try {
       const r = await api.get("/groups");
       setData(r.data);
+      setHydrated(true);
     } catch (e: any) {
       setError(e?.response?.data?.error || "Failed to load groups");
     } finally {
@@ -39,7 +41,7 @@ export function useGroups() {
     window.addEventListener('pianocrm:refresh', onWake);
     return () => { mounted = false; window.removeEventListener('pianocrm:refresh', onWake); };
   }, []);
-  return { data, loading, error, refresh };
+  return { data, loading: loading && !hydrated, error, refresh };
 }
 
 export async function createGroup(payload: { name: string; description?: string; memberIds: string[] }) {
