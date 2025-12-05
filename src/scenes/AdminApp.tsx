@@ -6,6 +6,7 @@ import StudentDetailPage from "../views/admin/StudentDetailPage";
 import SchedulePage from "../views/admin/SchedulePage";
 import GroupsPage from "../views/admin/GroupsPage";
 import Button from "../components/ui/Button";
+import LeadsPage from "../views/admin/LeadsPage";
 
 export default function AdminApp() {
   const nav = useNavigate();
@@ -26,6 +27,7 @@ export default function AdminApp() {
         <div className="mx-auto max-w-6xl px-4 py-3 flex flex-col gap-2 sm:h-14 sm:flex-row sm:items-center sm:justify-between">
           <div className="font-semibold text-center sm:text-left">Piano CRM - Admin</div>
           <nav className="flex flex-wrap items-center justify-center gap-2 text-sm sm:justify-end">
+            <Tab to="/admin/leads" label="Leads" />
             <Tab to="/admin/students" label="Students" />
             <Tab to="/admin/schedule" label="Schedule" />
             <Tab to="/admin/groups" label="Groups" />
@@ -42,6 +44,7 @@ export default function AdminApp() {
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
         <Routes>
+          <Route path="/leads" element={<LeadsPage />} />
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/:id" element={<StudentDetailPage />} />
           <Route path="/schedule" element={<SchedulePage />} />

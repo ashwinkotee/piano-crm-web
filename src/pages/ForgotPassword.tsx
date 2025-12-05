@@ -73,7 +73,7 @@ export default function ForgotPassword() {
       <form onSubmit={submit} className="relative z-10 w-[92%] max-w-md space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
         <div className="space-y-1">
           <div className="text-sm opacity-80">Reset portal password</div>
-          <h1 className="text-2xl font-semibold leading-tight">Learn Music with Ashwin</h1>
+          <h1 className="text-2xl font-semibold leading-tight">Ashwin&apos;s Piano Studio</h1>
           <p className="text-xs text-white/70">
             Enter the email used for your portal login, the 6-digit security key shared by the studio, and choose a new password.
           </p>

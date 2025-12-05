@@ -63,7 +63,7 @@ export default function Login() {
       <form onSubmit={submit} className="relative z-10 w-[92%] max-w-md rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.5)] text-white space-y-4">
         <div>
           <div className="text-sm opacity-80">Welcome to</div>
-          <div className="text-2xl font-semibold leading-tight">Learn Music with Ashwin</div>
+          <div className="text-2xl font-semibold leading-tight">Ashwin&apos;s Piano Studio</div>
         </div>
         <input
           type="email"

@@ -43,7 +43,7 @@ export default function TermsPage() {
           <p className="mt-1">
             Fees are due at the start of each month (by the 1st) so we can keep everything
             running smoothly. Payments are non-refundable, unless a program is canceled by
-            Learn Music with Ashwin.
+            Ashwin&apos;s Piano Studio.
           </p>
         </div>
 
@@ -107,7 +107,7 @@ export default function TermsPage() {
         <div>
           <div className="font-medium">9. Liability</div>
           <p className="mt-1">
-            Learn Music with Ashwin is not responsible for personal belongings brought to class.
+            Ashwin&apos;s Piano Studio is not responsible for personal belongings brought to class.
             Parents/guardians are responsible for the safety and supervision of their children before
             and after class hours.
           </p>

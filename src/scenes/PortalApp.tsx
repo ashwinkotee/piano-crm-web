@@ -6,6 +6,7 @@ import ProfilePage from "../views/portal/ProfilePage";
 import TermsPage from "../views/portal/TermsPage";
 import FeaturesPage from "../views/portal/FeaturesPage";
 import AboutPage from "../views/portal/AboutPage";
+import CompleteProfilePage from "../views/portal/CompleteProfilePage";
 
 export default function PortalApp() {
   const nav = useNavigate();
@@ -27,12 +28,12 @@ export default function PortalApp() {
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'theme-dark' : 'theme-light'} portal-bg`}>
-      <div className="mx-auto flex h-full w-full max-w-7xl">
+      <div className="flex h-full w-full">
         {/* Desktop sidebar */}
         <aside className={`neo-sidebar ${theme === 'dark' ? 'glass' : 'glass-light'} hidden w-60 flex-col p-4 md:flex`}>
           <div className="mb-6 flex items-center gap-2">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-400" />
-            <div className="text-sm font-semibold">Learn Music with Ashwin</div>
+            <div className="text-sm font-semibold">Ashwin&apos;s Piano Studio</div>
           </div>
           <nav className="flex flex-1 flex-col gap-1 text-sm">
             <SideLink to="/portal/home" label="Home" />
@@ -60,9 +61,9 @@ export default function PortalApp() {
         <div className="flex min-h-screen flex-1 flex-col">
           {/* Header */}
           <header className={`${theme === 'dark' ? 'glass' : 'glass-light'} sticky top-0 z-10 border-b border-white/10`}>
-            <div className="mx-auto w-full max-w-5xl px-4 py-3">
+            <div className="w-full px-4 py-3">
               <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold">Learn Music with Ashwin - Student Portal</div>
+                <div className="text-sm font-semibold">Ashwin&apos;s Piano Studio · Student Portal</div>
                 {/* Mobile actions */}
                 <div className="md:hidden flex items-center gap-2">
                   <button aria-label="Toggle menu" className="rounded-lg px-3 py-2 hover:bg-white/10 focus-ring" onClick={() => setMobileOpen((v) => !v)}>
@@ -93,11 +94,12 @@ export default function PortalApp() {
           </header>
 
           {/* Routes */}
-          <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
+          <main className="w-full flex-1 px-4 py-6">
             <Routes>
               <Route index element={<UpcomingPage />} />
               <Route path="home" element={<UpcomingPage />} />
               <Route path="profile" element={<ProfilePage />} />
+              <Route path="complete-profile" element={<CompleteProfilePage />} />
               <Route path="terms" element={<TermsPage />} />
               <Route path="features" element={<FeaturesPage />} />
               <Route path="about" element={<AboutPage />} />
@@ -107,10 +109,11 @@ export default function PortalApp() {
 
           {/* Footer */}
           <footer className={`${theme === 'dark' ? 'glass' : 'glass-light'} border-t border-white/10`}>
-            <div className="mx-auto w-full max-w-5xl px-4 py-4 text-xs text-slate-300 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>© Learn Music with Ashwin · Student Portal {import.meta.env.VITE_APP_VERSION ? `v${import.meta.env.VITE_APP_VERSION}` : ''}</div>
+            <div className="w-full px-4 py-4 text-xs text-slate-300 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>© Ashwin&apos;s Piano Studio · Student Portal {import.meta.env.VITE_APP_VERSION ? `v${import.meta.env.VITE_APP_VERSION}` : ''}</div>
               <nav className="flex flex-wrap gap-4">
                 <NavLink to="/portal/terms" className="hover:text-white">Terms and Conditions</NavLink>
+                <NavLink to="/portal/complete-profile" className="hover:text-white">Complete Profile</NavLink>
                 <NavLink to="/portal/features" className="hover:text-white">Portal Features</NavLink>
                 <NavLink to="/portal/about" className="hover:text-white">About</NavLink>
               </nav>
