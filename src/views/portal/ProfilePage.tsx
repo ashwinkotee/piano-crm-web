@@ -18,7 +18,7 @@ export default function ProfilePage() {
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [saveErr, setSaveErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ address: "", dateOfBirth: "", parentName: "", parentPhone: "", ageGroup: "" });
+  const [form, setForm] = useState<{ address: string; dateOfBirth: string; parentName: string; parentPhone: string; ageGroup: "" | "6-9" | "10-14" | "15+" }>({ address: "", dateOfBirth: "", parentName: "", parentPhone: "", ageGroup: "" });
 
   useEffect(() => {
     let mounted = true;
@@ -152,7 +152,7 @@ export default function ProfilePage() {
                 <div className="text-xs uppercase tracking-wide opacity-70">Age Group</div>
                 <select
                   value={form.ageGroup}
-                  onChange={(e) => setForm({ ...form, ageGroup: e.target.value })}
+                  onChange={(e) => setForm({ ...form, ageGroup: e.target.value as "" | "6-9" | "10-14" | "15+" })}
                   className="mt-1 w-full rounded-xl border px-3 py-2 text-slate-800"
                 >
                   <option value="">Select</option>
@@ -196,7 +196,7 @@ export default function ProfilePage() {
                       dateOfBirth: s.dateOfBirth ? new Date(s.dateOfBirth).toISOString().slice(0, 10) : "",
                       parentName: s.parentName || "",
                       parentPhone: s.parentPhone || "",
-                      ageGroup: s.ageGroup || "",
+                      ageGroup: (s.ageGroup as "" | "6-9" | "10-14" | "15+") || "",
                     });
                   }}
                 >
