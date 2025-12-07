@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { api, unwrapData } from "../lib/api";
 
 export type Homework = {
   _id: string;
@@ -21,7 +21,7 @@ export function useStudentHomework(studentId: string) {
     setError(null);
     try {
       const r = await api.get(`/students/${studentId}/homework`);
-      setItems(r.data);
+      setItems(unwrapData<Homework[]>(r) || []);
       setHydrated(true);
     } catch (e: any) {
       setError(e?.response?.data?.error || "Failed to load homework");
@@ -41,17 +41,17 @@ export function useStudentHomework(studentId: string) {
 
 export async function addHomework(studentId: string, text: string) {
   const r = await api.post(`/students/${studentId}/homework`, { text });
-  return r.data as Homework;
+  return unwrapData<Homework>(r);
 }
 
 export async function updateHomework(id: string, patch: Partial<Pick<Homework, "text" | "status">>) {
   const r = await api.put(`/homework/${id}`, patch);
-  return r.data as Homework;
+  return unwrapData<Homework>(r);
 }
 
 export async function deleteHomework(id: string) {
   const r = await api.delete(`/homework/${id}`);
-  return r.data as { ok: true };
+  return unwrapData<{ ok: true }>(r);
 }
 
 export function useMyHomework() {
@@ -64,7 +64,7 @@ export function useMyHomework() {
     setError(null);
     try {
       const r = await api.get(`/homework/mine`);
-      setItems(r.data);
+      setItems(unwrapData<Homework[]>(r) || []);
       setHydrated(true);
     } catch (e: any) {
       setError(e?.response?.data?.error || "Failed to load homework");

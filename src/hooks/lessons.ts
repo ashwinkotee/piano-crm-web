@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { api, unwrapData } from "../lib/api";
 
 export type Lesson = {
   _id: string;
@@ -23,7 +23,7 @@ export function useLessons(params: { view: "week"|"month"; startISO: string; stu
     setError(null);
     try {
       const r = await api.get("/lessons", { params: { view: params.view, start: params.startISO, studentId: params.studentId } });
-      setData(r.data);
+      setData(unwrapData<Lesson[]>(r) || []);
       setHydrated(true);
     } catch (e: any) {
       setError(e?.response?.data?.error || "Failed to load lessons");
@@ -43,17 +43,17 @@ export function useLessons(params: { view: "week"|"month"; startISO: string; stu
 
 export async function generateMonth(payload: { year: number; month: number; durationMinutes?: number; includeFifth?: boolean }) {
   const r = await api.post("/lessons/generate-month", payload);
-  return r.data as { ok: boolean; created: number };
+  return unwrapData<{ ok: boolean; created: number }>(r);
 }
 
 export async function updateLesson(id: string, patch: Partial<Pick<Lesson, "start"|"end"|"status"|"notes">>) {
   const r = await api.put(`/lessons/${id}`, patch);
-  return r.data as Lesson;
+  return unwrapData<Lesson>(r);
 }
 
 export async function deleteLesson(id: string) {
   const r = await api.delete(`/lessons/${id}`);
-  return r.data as { ok: boolean };
+  return unwrapData<{ ok: boolean }>(r);
 }
 
 export async function createLesson(payload: (
@@ -73,5 +73,5 @@ export async function createLesson(payload: (
   }
 )) {
   const r = await api.post("/lessons", payload);
-  return r.data as Lesson;
+  return unwrapData<Lesson>(r);
 }

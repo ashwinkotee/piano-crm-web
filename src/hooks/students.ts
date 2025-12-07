@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { api } from "../lib/api";
+import { api, unwrapData } from "../lib/api";
 
 export type Student = {
   _id: string;
@@ -41,7 +41,7 @@ export function useStudents(params?: {
     setError(null);
     try {
       const r = await api.get("/students", { params: query });
-      setData(r.data);
+      setData(unwrapData<Student[]>(r) || []);
       setHydrated(true);
     } catch (e: any) {
       setError(e?.response?.data?.error || "Failed to load students");
@@ -73,7 +73,7 @@ export async function createStudent(payload: {
   monthlyFee?: number;
 }) {
   const r = await api.post("/students", payload);
-  const d = r.data as any;
+  const d = unwrapData<any>(r);
   const student: Student = {
     _id: String(d._id ?? d.student?._id),
     name: d.name ?? d.student?.name,
@@ -92,22 +92,22 @@ export async function createStudent(payload: {
 
 export async function updateStudent(id: string, patch: Partial<Student>) {
   const r = await api.put(`/students/${id}`, patch);
-  return r.data as Student;
+  return unwrapData<Student>(r);
 }
 
 export async function getStudent(id: string) {
   const r = await api.get(`/students/${id}`);
-  return r.data as Student;
+  return unwrapData<Student>(r);
 }
 
 export async function getMyStudents() {
   const r = await api.get(`/students/me/list`);
-  return r.data as Student[];
+  return unwrapData<Student[]>(r) || [];
 }
 
 export async function acceptMyTerms() {
   const r = await api.post(`/students/me/accept-terms`, {});
-  return r.data as { updated: number; at: string };
+  return unwrapData<{ updated: number; at: string }>(r);
 }
 
 export async function createSibling(baseStudentId: string, payload: {
@@ -122,10 +122,10 @@ export async function createSibling(baseStudentId: string, payload: {
   defaultSlot?: { weekday: number; time: string };
 }) {
   const r = await api.post(`/students/${baseStudentId}/siblings`, payload);
-  return r.data as Student;
+  return unwrapData<Student>(r);
 }
 
 export async function deleteStudent(id: string) {
   const r = await api.delete(`/students/${id}`);
-  return r.data as { ok: boolean };
+  return unwrapData<{ ok: boolean }>(r);
 }

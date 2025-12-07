@@ -1,4 +1,4 @@
-import { api } from "../lib/api";
+import { api, unwrapData } from "../lib/api";
 import { useEffect, useState } from "react";
 
 export type Group = {
@@ -25,7 +25,7 @@ export function useGroups() {
     setError(null);
     try {
       const r = await api.get("/groups");
-      setData(r.data);
+      setData(unwrapData<Group[]>(r) || []);
     } catch (e: any) {
       setError(e?.response?.data?.error || "Failed to load groups");
     } finally {
@@ -44,25 +44,25 @@ export function useGroups() {
 
 export async function createGroup(payload: { name: string; description?: string; memberIds: string[] }) {
   const r = await api.post("/groups", payload);
-  return r.data as { group: Group; meta: GroupMeta };
+  return unwrapData<{ group: Group; meta: GroupMeta }>(r);
 }
 
 export async function updateGroup(id: string, payload: { name: string; description?: string; memberIds: string[] }) {
   const r = await api.put(`/groups/${id}`, payload);
-  return r.data as { group: Group; meta: GroupMeta };
+  return unwrapData<{ group: Group; meta: GroupMeta }>(r);
 }
 
 export async function addGroupMembers(id: string, memberIds: string[]) {
   const r = await api.post(`/groups/${id}/add-members`, { memberIds });
-  return r.data as { group: Group; meta: GroupMeta };
+  return unwrapData<{ group: Group; meta: GroupMeta }>(r);
 }
 
 export async function scheduleGroupSessions(id: string, payload: { dates: string[]; durationMinutes: number; notes?: string }) {
   const r = await api.post(`/groups/${id}/schedule`, payload);
-  return r.data as { ok: true; created: number };
+  return unwrapData<{ ok: true; created: number }>(r);
 }
 
 export async function deleteGroup(id: string) {
   const r = await api.delete(`/groups/${id}`);
-  return r.data as { ok: true };
+  return unwrapData<{ ok: true }>(r);
 }

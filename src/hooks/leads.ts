@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { api } from "../lib/api";
+import { api, unwrapData } from "../lib/api";
 
 export type LeadStatus = "Contacted" | "Trial" | "Won" | "Lost";
 
@@ -38,7 +38,7 @@ export function useLeads(params?: { status?: LeadStatus; q?: string }) {
     setError(null);
     try {
       const r = await api.get("/leads", { params: query });
-      setItems(r.data);
+      setItems(unwrapData<Lead[]>(r) || []);
       setHydrated(true);
     } catch (e: any) {
       setError(e?.response?.data?.error || "Failed to load leads");
@@ -67,7 +67,7 @@ export async function createLead(payload: {
   notes?: string;
 }) {
   const r = await api.post("/leads", payload);
-  return r.data as Lead;
+  return unwrapData<Lead>(r);
 }
 
 export async function updateLead(id: string, payload: Partial<{
@@ -83,17 +83,17 @@ export async function updateLead(id: string, payload: Partial<{
   outcome: string;
 }>) {
   const r = await api.put(`/leads/${id}`, payload);
-  return r.data as Lead;
+  return unwrapData<Lead>(r);
 }
 
 export async function scheduleLeadTrial(id: string, payload: { start: string; durationMinutes?: number }) {
   const r = await api.post(`/leads/${id}/trial`, payload);
-  return r.data as { lead: Lead; lesson: any };
+  return unwrapData<{ lead: Lead; lesson: any }>(r);
 }
 
 export async function deleteLead(id: string) {
   const r = await api.delete(`/leads/${id}`);
-  return r.data as { ok: boolean };
+  return unwrapData<{ ok: boolean }>(r);
 }
 
 export async function convertLead(id: string, payload: {
@@ -103,5 +103,5 @@ export async function convertLead(id: string, payload: {
   name?: string;
 }) {
   const r = await api.post(`/leads/${id}/convert`, payload);
-  return r.data as { leadId: string; studentId: string; tempPassword: string; portalUser: { _id: string; email: string } };
+  return unwrapData<{ leadId: string; studentId: string; tempPassword: string; portalUser: { _id: string; email: string } }>(r);
 }

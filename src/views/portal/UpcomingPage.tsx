@@ -24,7 +24,9 @@ export default function UpcomingPage() {
   const currentHomework = useMemo(() => homeworkAll.filter(h => (!selectedId || h.studentId === selectedId) && h.status !== 'Completed'), [homeworkAll, selectedId]);
   const pastHomework = useMemo(() => homeworkAll.filter(h => (!selectedId || h.studentId === selectedId) && h.status === 'Completed'), [homeworkAll, selectedId]);
 
+  // Group lessons by day; guard against empty data to avoid reduce throwing on first render
   const grouped = useMemo(() => {
+    if (!lessons || lessons.length === 0) return {};
     return lessons.reduce((acc: Record<string, typeof lessons>, l) => {
       const key = format(new Date(l.start), "yyyy-MM-dd");
       (acc[key] ||= []).push(l);

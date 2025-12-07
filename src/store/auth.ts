@@ -1,6 +1,6 @@
 // store/auth.ts
 import { create } from "zustand";
-import { api } from "../lib/api"; // axios instance with baseURL
+import { api, unwrapData } from "../lib/api"; // axios instance with baseURL
 
 type User = { id?: string; _id?: string; email: string; role: "admin" | "portal"; mustChangePassword?: boolean };
 
@@ -47,9 +47,9 @@ export async function revalidateAuth() {
       // @ts-ignore custom flag used by axiosAuth interceptor
       _skipAuthRefresh: true,
     } as any);
-    const accessToken = r.data.accessToken as string;
+    const accessToken = unwrapData<{ accessToken: string }>(r)?.accessToken as string;
     const me = await api.get("/auth/me", { headers: { Authorization: `Bearer ${accessToken}` } });
-    state.setAuth(accessToken, me.data);
+    state.setAuth(accessToken, unwrapData<User>(me));
     return;
   } catch (err: any) {
     refreshError = err;

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { api } from "../lib/api";
+import { api, unwrapData } from "../lib/api";
 import { useAuth } from "../store/auth";
 
 export default function OAuthCallback() {
@@ -7,10 +7,11 @@ export default function OAuthCallback() {
   useEffect(() => {
     (async () => {
       const r = await api.post("/auth/refresh", {}); // refresh cookie -> access token
-      const token = r.data.accessToken;
+      const token = unwrapData<{ accessToken: string }>(r)?.accessToken;
       const me = await api.get("/auth/me", { headers: { Authorization: `Bearer ${token}` } });
-      setAuth(token, me.data);
-      window.location.href = me.data.role === "admin" ? "/admin" : "/portal";
+      const user = unwrapData<any>(me);
+      setAuth(token!, user);
+      window.location.href = user.role === "admin" ? "/admin" : "/portal";
     })();
   }, []);
   return <div className="p-6">Signing you in…</div>;

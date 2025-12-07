@@ -22,3 +22,13 @@ export const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
 });
+
+// Some backend endpoints now wrap payloads in { data, meta }. This helper
+// extracts the useful data while remaining compatible with legacy shapes.
+export function unwrapData<T>(response: any): T {
+  const first = response && typeof response === "object" && "data" in response ? (response as any).data : response;
+  if (first && typeof first === "object" && "data" in (first as any)) {
+    return (first as any).data as T;
+  }
+  return first as T;
+}
