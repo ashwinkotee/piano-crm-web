@@ -90,6 +90,7 @@ export default function StudentDetailPage() {
           <Field label="Class Type" value={student.program} />
           <Field label="Group" value={groupNames} />
           <Field label="Monthly Fee" value={`$${student.monthlyFee ?? 0}`} />
+          <Field label="Credit" value={`${student.credit ?? 0}`} />
           <Field label="Status" value={student.active ? 'Active' : 'Inactive'} />
           <Field label="Default Weekly Slot" value={displaySlot} />
           <Field label="Terms and Conditions" value={student.termsAccepted ? 'Accepted' : 'Not accepted'} />
@@ -100,6 +101,11 @@ export default function StudentDetailPage() {
           <Field label="Phone Number" value={student.parentPhone || "-"} />
         </dl>
       </div>
+
+      <StudentCreditEditor
+        student={student}
+        onSaved={async()=>{ const s = await getStudent(student._id); setStudent(s); setNotice('Credit updated.'); setTimeout(()=>setNotice(null), 3000); }}
+      />
 
       <StudentSchedule studentId={student._id} />
 
@@ -113,6 +119,52 @@ function Field({ label, value }:{ label: string; value: string }){
     <div>
       <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
       <div className="mt-1 font-medium">{value}</div>
+    </div>
+  );
+}
+
+function StudentCreditEditor({ student, onSaved }:{ student: Student; onSaved: ()=>Promise<void>|void }) {
+  const [credit, setCredit] = useState<number>(student.credit ?? 0);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string|null>(null);
+
+  useEffect(() => {
+    setCredit(student.credit ?? 0);
+  }, [student.credit]);
+
+  async function save(){
+    setErr(null); setSaving(true);
+    try {
+      await updateStudent(student._id, { credit });
+      await onSaved();
+    } catch (e:any) {
+      setErr(e?.response?.data?.error || "Could not update credit");
+      setSaving(false);
+      return;
+    }
+    setSaving(false);
+  }
+
+  return (
+    <div className="rounded-2xl border bg-white p-4 shadow-sm">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="font-semibold">Credit</div>
+        <div className="text-sm text-slate-500">Current: {student.credit ?? 0}</div>
+      </div>
+      <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[1fr_auto]">
+        <label className="block text-sm">
+          <div className="text-slate-600">Set credit</div>
+          <input
+            type="number"
+            className="w-full rounded-xl border px-3 py-2"
+            value={credit}
+            onChange={e=>setCredit(e.target.value === "" ? 0 : Number(e.target.value))}
+          />
+        </label>
+        <Button disabled={saving} onClick={save}>{saving ? 'Saving.' : 'Update credit'}</Button>
+      </div>
+      {err && <div className="mt-2 text-sm text-rose-600">{err}</div>}
+      <div className="mt-1 text-xs text-slate-500">Use negative values if the student owes a balance.</div>
     </div>
   );
 }

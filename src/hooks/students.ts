@@ -11,6 +11,7 @@ export type Student = {
   program: "One-on-one" | "Group";
   ageGroup?: "6-9" | "10-14" | "15+";
   monthlyFee?: number;
+  credit?: number;
   active: boolean;
   portalUserId?: string;
   termsAccepted?: boolean;
@@ -84,6 +85,7 @@ export async function createStudent(payload: {
     program: d.program ?? d.student?.program,
     ageGroup: d.ageGroup ?? d.student?.ageGroup,
     monthlyFee: d.monthlyFee ?? d.student?.monthlyFee,
+    credit: d.credit ?? d.student?.credit,
     active: Boolean(d.active ?? d.student?.active ?? true),
   };
   const portalUser = { id: String(d.portalUser?._id ?? d.portalUser?.id ?? d.userId ?? ""), email: d.portalUser?.email };

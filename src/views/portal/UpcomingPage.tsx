@@ -10,6 +10,10 @@ export default function UpcomingPage() {
   const startISO = useMemo(() => format(cursor, "yyyy-MM-dd"), [cursor]);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedStudent = useMemo(() => {
+    if (!students.length) return null;
+    return students.find(s => s._id === selectedId) || students[0];
+  }, [selectedId, students]);
   const { items: homeworkAll, loading: hwLoading, refresh: refreshHW } = useMyHomework();
   const [showPastHW, setShowPastHW] = useState(false);
 
@@ -147,6 +151,10 @@ export default function UpcomingPage() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-xl font-semibold section-title">{format(cursor, "MMMM yyyy")}</div>
+              <div className="mt-1 flex items-center gap-2 text-sm text-slate-200">
+                <span className="uppercase tracking-wide text-xs text-slate-400">credit:</span>
+                <span className="rounded-full bg-white/10 px-3 py-1 font-medium text-white">{selectedStudent ? selectedStudent.credit ?? 0 : 0}</span>
+              </div>
               <div className="text-sm text-slate-300">Your teacher manages scheduling. Contact them for any changes.</div>
             </div>
             <div className="flex flex-wrap gap-2">
