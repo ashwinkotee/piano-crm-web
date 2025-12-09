@@ -1,4 +1,4 @@
-import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
+import { NavLink, Route, Routes, useNavigate, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../store/auth";
 import StudentsPage from "../views/admin/StudentsPage";
@@ -44,12 +44,13 @@ export default function AdminApp() {
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
         <Routes>
+          <Route index element={<Navigate to="/admin/schedule" replace />} />
           <Route path="/leads" element={<LeadsPage />} />
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/:id" element={<StudentDetailPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
           <Route path="/groups" element={<GroupsPage />} />
-          <Route path="*" element={<div className="text-slate-300">Pick a tab.</div>} />
+          <Route path="*" element={<Navigate to="/admin/schedule" replace />} />
         </Routes>
       </main>
     </div>

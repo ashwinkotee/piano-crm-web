@@ -13,6 +13,9 @@ export default function StudentsPage() {
   const { data, loading, refresh } = useStudents({ q: search });
 
   const all = useMemo(() => [...data].sort((a,b) => a.name.localeCompare(b.name)), [data]);
+  const active = useMemo(() => all.filter(s => s.active), [all]);
+  const inactive = useMemo(() => all.filter(s => !s.active), [all]);
+  const [showInactive, setShowInactive] = useState(false);
 
   const [adding, setAdding] = useState(false);
   const [invite, setInvite] = useState<{ email: string; tempPassword: string } | null>(null);
@@ -22,7 +25,7 @@ export default function StudentsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="text-xl font-semibold">Students</div>
-          <div className="text-sm text-slate-500">All students in one table</div>
+          <div className="text-sm text-slate-500">Active students on top; inactive are tucked below.</div>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <input
@@ -39,9 +42,28 @@ export default function StudentsPage() {
         <div className="text-slate-500">Loading.</div>
       ) : (
         <div className="rounded-2xl border bg-white p-4 shadow-sm overflow-x-auto">
-          <div className="mb-2 font-semibold">All Students</div>
+          <div className="mb-2 font-semibold">Active Students</div>
           <div className="mb-3 text-xs text-slate-500">Hint: Click a student’s name to view/edit.</div>
-          <StudentTable items={all} />
+          <StudentTable items={active} />
+
+          <div className="mt-6 flex items-center justify-between">
+            <div className="font-semibold">Inactive Students</div>
+            <button
+              type="button"
+              onClick={() => setShowInactive(v => !v)}
+              className="flex items-center gap-1 rounded-lg border px-3 py-1 text-sm hover:bg-slate-50"
+            >
+              <span>{showInactive ? "Hide" : "Show"}</span>
+              <svg className={`h-4 w-4 transition-transform ${showInactive ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
+                <path d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.188l3.71-3.958a.75.75 0 0 1 1.08 1.04l-4.24 4.52a.75.75 0 0 1-1.08 0l-4.24-4.52a.75.75 0 0 1 .02-1.06Z" />
+              </svg>
+            </button>
+          </div>
+          {showInactive && (
+            <div className="mt-3">
+              <StudentTable items={inactive} emptyLabel="No inactive students" />
+            </div>
+          )}
         </div>
       )}
 
@@ -62,7 +84,7 @@ export default function StudentsPage() {
   );
 }
 
-function StudentTable({ items }:{ items: Student[] }) {
+function StudentTable({ items, emptyLabel = "No students" }:{ items: Student[]; emptyLabel?: string }) {
   const { data: groups } = useGroups();
   const groupByStudent: Record<string, string[]> = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -113,7 +135,7 @@ function StudentTable({ items }:{ items: Student[] }) {
             );
           })}
           {items.length === 0 && (
-            <tr><td colSpan={6} className="p-3 text-slate-500">No students</td></tr>
+            <tr><td colSpan={6} className="p-3 text-slate-500">{emptyLabel}</td></tr>
           )}
         </tbody>
       </table>
@@ -215,4 +237,3 @@ function TempPasswordDialog({ info, onClose }:{
     </Modal>
   );
 }
-
